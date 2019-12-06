@@ -44,6 +44,15 @@ public abstract class SubScreenFragment extends PreferenceFragment
         }
     }
 
+
+    static void setPreferenceDisabled(final String prefKey, final PreferenceScreen screen) {
+        setPreferenceEnabled(prefKey, false, screen);
+    }
+
+    void setPreferenceDisabled(final String prefKey) {
+        setPreferenceEnabled(prefKey, false);
+    }
+
     static void removePreference(final String prefKey, final PreferenceScreen screen) {
         final Preference preference = screen.findPreference(prefKey);
         if (preference != null) {

@@ -83,13 +83,23 @@ public final class CorrectionSettingsFragment extends SubScreenFragment
         final Intent editPersonalDictionaryIntent = editPersonalDictionary.getIntent();
         final ResolveInfo ri = USE_INTERNAL_PERSONAL_DICTIONARY_SETTINGS ? null
                 : pm.resolveActivity(
-                        editPersonalDictionaryIntent, PackageManager.MATCH_DEFAULT_ONLY);
+                editPersonalDictionaryIntent, PackageManager.MATCH_DEFAULT_ONLY);
         if (ri == null) {
             overwriteUserDictionaryPreference(editPersonalDictionary);
         }
 
         mUseContactsPreference = (SwitchPreference) findPreference(Settings.PREF_KEY_USE_CONTACTS_DICT);
         turnOffUseContactsIfNoPermission();
+
+        SharedPreferences sharedPreferences = getSharedPreferences();
+        if (sharedPreferences.getBoolean(Settings.PREF_PREDICTIVE_ENGINE_VERSION_TWO, false)) {
+            setPreferenceDisabled(Settings.PREF_BLOCK_POTENTIALLY_OFFENSIVE);
+            setPreferenceDisabled(Settings.PREF_AUTO_CORRECTION);
+            setPreferenceDisabled(Settings.PREF_SHOW_SUGGESTIONS);
+            setPreferenceDisabled(Settings.PREF_KEY_USE_PERSONALIZED_DICTS);
+            setPreferenceDisabled(Settings.PREF_KEY_USE_CONTACTS_DICT);
+            setPreferenceDisabled(Settings.PREF_BIGRAM_PREDICTIONS);
+        }
     }
 
     private void overwriteUserDictionaryPreference(final Preference userDictionaryPreference) {
@@ -116,9 +126,17 @@ public final class CorrectionSettingsFragment extends SubScreenFragment
         }
     }
 
-    @Override
-    public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
-        if (!TextUtils.equals(key, Settings.PREF_KEY_USE_CONTACTS_DICT)) {
+    @Override public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
+        if (TextUtils.equals(key, Settings.PREF_PREDICTIVE_ENGINE_VERSION_TWO)) {
+            boolean state = !sharedPreferences.getBoolean(key, false);
+            setPreferenceEnabled(Settings.PREF_BLOCK_POTENTIALLY_OFFENSIVE, state);
+            setPreferenceEnabled(Settings.PREF_AUTO_CORRECTION, state);
+            setPreferenceEnabled(Settings.PREF_SHOW_SUGGESTIONS, state);
+            setPreferenceEnabled(Settings.PREF_KEY_USE_PERSONALIZED_DICTS, state);
+            setPreferenceEnabled(Settings.PREF_KEY_USE_CONTACTS_DICT, state);
+            setPreferenceEnabled(Settings.PREF_BIGRAM_PREDICTIONS, state);
+            return;
+        } else if (!TextUtils.equals(key, Settings.PREF_KEY_USE_CONTACTS_DICT)) {
             return;
         }
         if (!sharedPreferences.getBoolean(key, false)) {

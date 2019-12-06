@@ -142,6 +142,11 @@
     <!-- Description for show suggestions -->
     <string name="prefs_show_suggestions_summary">Display suggested words while typing</string>
 
+    <!-- Option to use the custom predictive engine [CHAR_LIMIT=30] -->
+    <string name="prefs_predictive_engine_version_two_title" translatable="false">Predictive Engine v2</string>
+    <!-- Summary for option to use the custom predictive engine [CHAR_LIMIT=80 (two lines) or 40 (fits on one line, preferable)] -->
+    <string name="prefs_predictive_engine_version_two_summary" translatable="false">Use the Predictive Engine v2, disables everything else</string>
+
     <!-- Option to block potentially offensive words to be shown [CHAR_LIMIT=30] -->
     <string name="prefs_block_potentially_offensive_title">Block offensive words</string>
     <!-- Summary for option to block potentially offensive words to be shown [CHAR_LIMIT=80 (two lines) or 40 (fits on one line, preferable)] -->
