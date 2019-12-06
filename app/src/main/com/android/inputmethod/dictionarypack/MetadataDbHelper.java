@@ -382,6 +382,7 @@ public class MetadataDbHelper extends SQLiteOpenHelper {
      * @param uri the metadata URI we just downloaded
      */
     public static void saveLastUpdateTimeOfUri(final Context context, final String uri) {
+        PrivateLog.getInstance(context);
         PrivateLog.log("Save last update time of URI : " + uri + " " + System.currentTimeMillis());
         final ContentValues values = new ContentValues();
         values.put(CLIENT_LAST_UPDATE_DATE_COLUMN, System.currentTimeMillis());

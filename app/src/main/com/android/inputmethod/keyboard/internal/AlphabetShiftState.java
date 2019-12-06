@@ -18,9 +18,11 @@ package com.android.inputmethod.keyboard.internal;
 
 import android.util.Log;
 
+import com.android.inputmethod.latin.define.DebugFlags;
+
 public final class AlphabetShiftState {
     private static final String TAG = AlphabetShiftState.class.getSimpleName();
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = DebugFlags.DEBUG_ENABLED;
 
     private static final int UNSHIFTED = 0;
     private static final int MANUAL_SHIFTED = 1;

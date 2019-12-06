@@ -27,10 +27,11 @@ import AOSP.KEYBOARD.R;
 import com.android.inputmethod.keyboard.Key;
 import com.android.inputmethod.keyboard.Keyboard;
 import com.android.inputmethod.keyboard.KeyboardView;
+import com.android.inputmethod.latin.define.DebugFlags;
 
 final class EmojiPalettesAdapter extends PagerAdapter {
     private static final String TAG = EmojiPalettesAdapter.class.getSimpleName();
-    private static final boolean DEBUG_PAGER = false;
+    private static final boolean DEBUG_PAGER = DebugFlags.DEBUG_ENABLED;
 
     private final EmojiPageKeyboardView.OnKeyEventListener mListener;
     private final DynamicGridKeyboard mRecentsKeyboard;

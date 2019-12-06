@@ -21,6 +21,7 @@ import android.util.Log;
 import com.android.inputmethod.latin.common.Constants;
 import com.android.inputmethod.latin.common.InputPointers;
 import com.android.inputmethod.latin.common.ResizableIntArray;
+import com.android.inputmethod.latin.define.DebugFlags;
 
 /**
  * This class holds event points to recognize a gesture stroke.
@@ -28,8 +29,8 @@ import com.android.inputmethod.latin.common.ResizableIntArray;
  */
 public final class GestureStrokeRecognitionPoints {
     private static final String TAG = GestureStrokeRecognitionPoints.class.getSimpleName();
-    private static final boolean DEBUG = false;
-    private static final boolean DEBUG_SPEED = false;
+    private static final boolean DEBUG = DebugFlags.DEBUG_ENABLED;
+    private static final boolean DEBUG_SPEED = DebugFlags.DEBUG_ENABLED;
 
     // The height of extra area above the keyboard to draw gesture trails.
     // Proportional to the keyboard height.

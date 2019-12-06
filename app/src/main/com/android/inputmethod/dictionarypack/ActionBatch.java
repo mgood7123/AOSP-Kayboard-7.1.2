@@ -150,6 +150,7 @@ public final class ActionBatch {
             Log.i(TAG, String.format("Starting the dictionary download with version:"
                             + " %d and Url: %s", mWordList.mVersion, uri));
             DebugLogUtils.l("Starting download of", uri, "with id", downloadId);
+            PrivateLog.getInstance(context);
             PrivateLog.log("Starting download of " + uri + ", id : " + downloadId);
         }
     }
@@ -313,6 +314,7 @@ public final class ActionBatch {
                     mWordList.mRemoteFilename, mWordList.mLastUpdate, mWordList.mRawChecksum,
                     mWordList.mChecksum, mWordList.mRetryCount, mWordList.mFileSize,
                     mWordList.mVersion, mWordList.mFormatVersion);
+            PrivateLog.getInstance(context);
             PrivateLog.log("Insert 'available' record for " + mWordList.mDescription
                     + " and locale " + mWordList.mLocale);
             db.insert(MetadataDbHelper.METADATA_TABLE_NAME, null, values);
@@ -364,6 +366,7 @@ public final class ActionBatch {
                     mWordList.mRemoteFilename, mWordList.mLastUpdate,
                     mWordList.mRawChecksum, mWordList.mChecksum, mWordList.mRetryCount,
                     mWordList.mFileSize, mWordList.mVersion, mWordList.mFormatVersion);
+            PrivateLog.getInstance(context);
             PrivateLog.log("Insert 'preinstalled' record for " + mWordList.mDescription
                     + " and locale " + mWordList.mLocale);
             db.insert(MetadataDbHelper.METADATA_TABLE_NAME, null, values);
@@ -406,6 +409,7 @@ public final class ActionBatch {
                     mWordList.mRemoteFilename, mWordList.mLastUpdate, mWordList.mRawChecksum,
                     mWordList.mChecksum, mWordList.mRetryCount, mWordList.mFileSize,
                     mWordList.mVersion, mWordList.mFormatVersion);
+            PrivateLog.getInstance(context);
             PrivateLog.log("Updating record for " + mWordList.mDescription
                     + " and locale " + mWordList.mLocale);
             db.update(MetadataDbHelper.METADATA_TABLE_NAME, values,

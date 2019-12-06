@@ -20,6 +20,7 @@ import android.util.Log;
 
 import com.android.inputmethod.annotations.UsedForTesting;
 import com.android.inputmethod.keyboard.internal.MatrixUtils.MatrixOperationFailedException;
+import com.android.inputmethod.latin.define.DebugFlags;
 
 import java.util.Arrays;
 
@@ -30,7 +31,7 @@ import java.util.Arrays;
 @UsedForTesting
 public class SmoothingUtils {
     private static final String TAG = SmoothingUtils.class.getSimpleName();
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = DebugFlags.DEBUG_ENABLED;
 
     private SmoothingUtils() {
         // not allowed to instantiate publicly

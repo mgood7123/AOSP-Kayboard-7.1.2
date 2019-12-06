@@ -17,10 +17,11 @@
 package com.android.inputmethod.latin.common;
 
 import com.android.inputmethod.annotations.UsedForTesting;
+import com.android.inputmethod.latin.define.DebugFlags;
 
 // TODO: This class is not thread-safe.
 public final class InputPointers {
-    private static final boolean DEBUG_TIME = false;
+    private static final boolean DEBUG_TIME = DebugFlags.DEBUG_ENABLED;
 
     private final int mDefaultCapacity;
     private final ResizableIntArray mXCoordinates;

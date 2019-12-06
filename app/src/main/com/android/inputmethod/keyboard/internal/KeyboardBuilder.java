@@ -35,6 +35,7 @@ import com.android.inputmethod.keyboard.KeyboardId;
 import com.android.inputmethod.keyboard.KeyboardTheme;
 import com.android.inputmethod.latin.common.Constants;
 import com.android.inputmethod.latin.common.StringUtils;
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.utils.ResourceUtils;
 import com.android.inputmethod.latin.utils.XmlParseUtils;
 import com.android.inputmethod.latin.utils.XmlParseUtils.ParseException;
@@ -121,7 +122,7 @@ import javax.annotation.Nonnull;
 // TODO: Write unit tests for this class.
 public class KeyboardBuilder<KP extends KeyboardParams> {
     private static final String BUILDER_TAG = "Keyboard.Builder";
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = DebugFlags.DEBUG_ENABLED;
 
     // Keyboard XML Tags
     private static final String TAG_KEYBOARD = "Keyboard";

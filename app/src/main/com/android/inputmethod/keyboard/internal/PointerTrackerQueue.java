@@ -18,11 +18,13 @@ package com.android.inputmethod.keyboard.internal;
 
 import android.util.Log;
 
+import com.android.inputmethod.latin.define.DebugFlags;
+
 import java.util.ArrayList;
 
 public final class PointerTrackerQueue {
     private static final String TAG = PointerTrackerQueue.class.getSimpleName();
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = DebugFlags.DEBUG_ENABLED;
 
     public interface Element {
         public boolean isModifier();

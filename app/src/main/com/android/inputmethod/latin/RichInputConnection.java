@@ -36,6 +36,7 @@ import com.android.inputmethod.compat.InputConnectionCompatUtils;
 import com.android.inputmethod.latin.common.Constants;
 import com.android.inputmethod.latin.common.StringUtils;
 import com.android.inputmethod.latin.common.UnicodeSurrogate;
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.inputlogic.PrivateCommandPerformer;
 import com.android.inputmethod.latin.settings.SpacingAndPunctuations;
 import com.android.inputmethod.latin.utils.CapsModeUtils;
@@ -61,9 +62,9 @@ import javax.annotation.Nullable;
  */
 public final class RichInputConnection implements PrivateCommandPerformer {
     private static final String TAG = "RichInputConnection";
-    private static final boolean DBG = false;
-    private static final boolean DEBUG_PREVIOUS_TEXT = false;
-    private static final boolean DEBUG_BATCH_NESTING = false;
+    private static final boolean DBG = DebugFlags.DEBUG_ENABLED;
+    private static final boolean DEBUG_PREVIOUS_TEXT = DebugFlags.DEBUG_ENABLED;
+    private static final boolean DEBUG_BATCH_NESTING = DebugFlags.DEBUG_ENABLED;
     private static final int NUM_CHARS_TO_GET_BEFORE_CURSOR = 40;
     private static final int NUM_CHARS_TO_GET_AFTER_CURSOR = 40;
     private static final int INVALID_CURSOR_POSITION = -1;

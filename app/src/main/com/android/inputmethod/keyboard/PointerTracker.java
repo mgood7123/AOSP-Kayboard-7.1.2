@@ -49,10 +49,10 @@ import javax.annotation.Nullable;
 public final class PointerTracker implements PointerTrackerQueue.Element,
         BatchInputArbiterListener {
     private static final String TAG = PointerTracker.class.getSimpleName();
-    private static final boolean DEBUG_EVENT = false;
-    private static final boolean DEBUG_MOVE_EVENT = false;
-    private static final boolean DEBUG_LISTENER = false;
-    private static boolean DEBUG_MODE = DebugFlags.DEBUG_ENABLED || DEBUG_EVENT;
+    private static final boolean DEBUG_EVENT = DebugFlags.DEBUG_ENABLED;
+    private static final boolean DEBUG_MOVE_EVENT = DebugFlags.DEBUG_ENABLED;
+    private static final boolean DEBUG_LISTENER = DebugFlags.DEBUG_ENABLED;
+    private static boolean DEBUG_MODE = DebugFlags.DEBUG_ENABLED;
 
     static final class PointerTrackerParams {
         public final boolean mKeySelectionByDraggingFinger;

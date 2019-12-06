@@ -21,6 +21,8 @@ import android.util.Log;
 import android.util.SparseArray;
 
 import AOSP.KEYBOARD.R;
+
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.utils.XmlParseUtils;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -34,7 +36,7 @@ import javax.annotation.Nullable;
 
 public final class KeyStylesSet {
     private static final String TAG = KeyStylesSet.class.getSimpleName();
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = DebugFlags.DEBUG_ENABLED;
 
     @Nonnull
     private final HashMap<String, KeyStyle> mStyles = new HashMap<>();

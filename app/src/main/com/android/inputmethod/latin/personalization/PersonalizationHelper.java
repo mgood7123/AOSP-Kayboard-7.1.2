@@ -20,6 +20,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.android.inputmethod.latin.common.FileUtils;
+import com.android.inputmethod.latin.define.DebugFlags;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -35,7 +36,7 @@ import javax.annotation.Nullable;
  */
 public class PersonalizationHelper {
     private static final String TAG = PersonalizationHelper.class.getSimpleName();
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = DebugFlags.DEBUG_ENABLED;
 
     private static final ConcurrentHashMap<String, SoftReference<UserHistoryDictionary>>
             sLangUserHistoryDictCache = new ConcurrentHashMap<>();

@@ -35,6 +35,7 @@ import com.android.inputmethod.latin.NgramContext;
 import com.android.inputmethod.latin.RichInputMethodSubtype;
 import com.android.inputmethod.latin.SuggestedWords;
 import com.android.inputmethod.latin.common.ComposedData;
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.settings.SettingsValuesForSuggestion;
 import com.android.inputmethod.latin.utils.AdditionalSubtypeUtils;
 import com.android.inputmethod.latin.utils.ScriptUtils;
@@ -53,7 +54,7 @@ import javax.annotation.Nonnull;
 public final class AndroidSpellCheckerService extends SpellCheckerService
         implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = AndroidSpellCheckerService.class.getSimpleName();
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = DebugFlags.DEBUG_ENABLED;
 
     public static final String PREF_USE_CONTACTS_KEY = "pref_spellcheck_use_contacts";
 

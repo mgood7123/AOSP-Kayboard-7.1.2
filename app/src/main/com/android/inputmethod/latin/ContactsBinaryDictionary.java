@@ -26,6 +26,7 @@ import android.util.Log;
 import com.android.inputmethod.annotations.ExternallyReferenced;
 import com.android.inputmethod.latin.ContactsManager.ContactsChangedListener;
 import com.android.inputmethod.latin.common.StringUtils;
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.permissions.PermissionsUtil;
 import com.android.inputmethod.latin.personalization.AccountUtils;
 
@@ -41,8 +42,8 @@ public class ContactsBinaryDictionary extends ExpandableBinaryDictionary
     private static final String TAG = ContactsBinaryDictionary.class.getSimpleName();
     private static final String NAME = "contacts";
 
-    private static final boolean DEBUG = false;
-    private static final boolean DEBUG_DUMP = false;
+    private static final boolean DEBUG = DebugFlags.DEBUG_ENABLED;
+    private static final boolean DEBUG_DUMP = DebugFlags.DEBUG_ENABLED;
 
     /**
      * Whether to use "firstname lastname" in bigram predictions.

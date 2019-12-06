@@ -28,6 +28,7 @@ import com.android.inputmethod.latin.settings.SettingsValuesForSuggestion;
 import com.android.inputmethod.latin.utils.AutoCorrectionUtils;
 import com.android.inputmethod.latin.utils.BinaryDictionaryUtils;
 import com.android.inputmethod.latin.utils.SuggestionResults;
+import com.android.inputmethod.predictive.engine.engine;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,6 +38,7 @@ import javax.annotation.Nonnull;
 
 import static com.android.inputmethod.latin.define.DecoderSpecificConstants.SHOULD_AUTO_CORRECT_USING_NON_WHITE_LISTED_SUGGESTION;
 import static com.android.inputmethod.latin.define.DecoderSpecificConstants.SHOULD_REMOVE_PREVIOUSLY_REJECTED_SUGGESTION;
+import static java.lang.Thread.sleep;
 
 /**
  * This class loads a dictionary and provides a list of suggestions for a given sequence of
@@ -150,6 +152,16 @@ public final class Suggest {
         return firstSuggestedWordInfo;
     }
 
+    private final SuggestedWordInfo newWord(String word) {
+        return new SuggestedWordInfo(
+                word, "",
+                SuggestedWordInfo.MAX_SCORE,
+                SuggestedWordInfo.KIND_TYPED,
+                Dictionary.DICTIONARY_USER_TYPED,
+                SuggestedWordInfo.NOT_AN_INDEX /* indexOfTouchPointOfSecondWord */,
+                SuggestedWordInfo.NOT_A_CONFIDENCE /* autoCommitFirstWordConfidence */);
+    }
+
     // Retrieves suggestions for non-batch input (typing, recorrection, predictions...)
     // and calls the callback function with the suggestions.
     private void getSuggestedWordsForNonBatchInput(
@@ -161,25 +173,23 @@ public final class Suggest {
         final String typedWordString = wordComposer.getTypedWord();
         if (isUsingPredictiveEngineVersionTwo) {
             final boolean isTypedWordValid = false;
-
-            final SuggestedWordInfo typedWordInfo = new SuggestedWordInfo(
-                    typedWordString,
-                    "",
-                    SuggestedWordInfo.MAX_SCORE,
-                    SuggestedWordInfo.KIND_TYPED,
-                    Dictionary.DICTIONARY_USER_TYPED,
-                    SuggestedWordInfo.NOT_AN_INDEX /* indexOfTouchPointOfSecondWord */,
-                    SuggestedWordInfo.NOT_A_CONFIDENCE /* autoCommitFirstWordConfidence */);
             final ArrayList<SuggestedWordInfo> suggestionsList = new ArrayList(0);
-            suggestionsList.add(typedWordInfo);
-            suggestionsList.add(typedWordInfo);
+            new engine().onSuggestion(typedWordString, engine.types.NO_TYPE);
+            new engine().info(typedWordString,
+                    "mCursorPositionWithinWord: " + wordComposer.getCursorPositionWithinWord());
+            // fill the list
+            suggestionsList.add(newWord("1"));
+            suggestionsList.add(newWord("2"));
+            suggestionsList.add(newWord("3"));
+            suggestionsList.add(newWord("4"));
+
             callback.onGetSuggestedWords(
                     new SuggestedWords(
                             suggestionsList,
                             null,
-                            typedWordInfo,
-                            isTypedWordValid,
-                            true,
+                            null,
+                            false,
+                            false,
                             false,
                             SuggestedWords.INPUT_STYLE_PREDICTION,
                             sequenceNumber

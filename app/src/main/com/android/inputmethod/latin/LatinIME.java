@@ -1575,10 +1575,15 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     @Override
     public void setNeutralSuggestionStrip() {
         final SettingsValues currentSettings = mSettings.getCurrent();
-        final SuggestedWords neutralSuggestions = currentSettings.mBigramPredictionEnabled
+        if (currentSettings.mPredictionEngineVersionTwoEnabled) {
+            // TODO: DETERMINE WHEN THIS IS CALLED
+            Log.i(TAG, "setNeutralSuggestionStrip");
+            setSuggestedWords(SuggestedWords.getEmptyInstance());
+        } else setSuggestedWords(
+                currentSettings.mBigramPredictionEnabled
                 ? SuggestedWords.getEmptyInstance()
-                : currentSettings.mSpacingAndPunctuations.mSuggestPuncList;
-        setSuggestedWords(neutralSuggestions);
+                : currentSettings.mSpacingAndPunctuations.mSuggestPuncList
+        );
     }
 
     // Outside LatinIME, only used by the {@link InputTestsBase} test suite.

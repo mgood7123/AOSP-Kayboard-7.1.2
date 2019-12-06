@@ -21,6 +21,7 @@ import android.util.Log;
 import com.android.inputmethod.annotations.UsedForTesting;
 import com.android.inputmethod.latin.NgramContext;
 import com.android.inputmethod.latin.common.StringUtils;
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.define.DecoderSpecificConstants;
 import com.android.inputmethod.latin.settings.SpacingAndPunctuations;
 
@@ -32,7 +33,7 @@ import java.util.Locale;
 // rename this class or field name. See BinaryDictionary#addMultipleDictionaryEntriesNative().
 public final class WordInputEventForPersonalization {
     private static final String TAG = WordInputEventForPersonalization.class.getSimpleName();
-    private static final boolean DEBUG_TOKEN = false;
+    private static final boolean DEBUG_TOKEN = DebugFlags.DEBUG_ENABLED;
 
     public final int[] mTargetWord;
     public final int mPrevWordsCount;

@@ -32,6 +32,7 @@ import com.android.inputmethod.dictionarypack.DictionaryPackConstants;
 import com.android.inputmethod.dictionarypack.MD5Calculator;
 import com.android.inputmethod.dictionarypack.UpdateHandler;
 import com.android.inputmethod.latin.common.FileUtils;
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.define.DecoderSpecificConstants;
 import com.android.inputmethod.latin.utils.DictionaryInfoUtils;
 import com.android.inputmethod.latin.utils.DictionaryInfoUtils.DictionaryInfo;
@@ -59,7 +60,7 @@ import java.util.Locale;
  */
 public final class BinaryDictionaryFileDumper {
     private static final String TAG = BinaryDictionaryFileDumper.class.getSimpleName();
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = DebugFlags.DEBUG_ENABLED;
 
     /**
      * The size of the temporary buffer to copy files.

@@ -31,6 +31,7 @@ import android.text.TextUtils;
 
 import AOSP.KEYBOARD.R;
 import com.android.inputmethod.dictionarypack.DictionarySettingsActivity;
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.permissions.PermissionsManager;
 import com.android.inputmethod.latin.permissions.PermissionsUtil;
 import com.android.inputmethod.latin.userdictionary.UserDictionaryList;
@@ -55,7 +56,7 @@ public final class CorrectionSettingsFragment extends SubScreenFragment
     implements SharedPreferences.OnSharedPreferenceChangeListener,
             PermissionsManager.PermissionsResultCallback {
 
-    private static final boolean DBG_USE_INTERNAL_PERSONAL_DICTIONARY_SETTINGS = false;
+    private static final boolean DBG_USE_INTERNAL_PERSONAL_DICTIONARY_SETTINGS = DebugFlags.DEBUG_ENABLED;
     private static final boolean USE_INTERNAL_PERSONAL_DICTIONARY_SETTINGS =
             DBG_USE_INTERNAL_PERSONAL_DICTIONARY_SETTINGS
             || Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR2;

@@ -25,6 +25,7 @@ import android.os.SystemClock;
 
 import com.android.inputmethod.latin.common.Constants;
 import com.android.inputmethod.latin.common.ResizableIntArray;
+import com.android.inputmethod.latin.define.DebugFlags;
 
 /**
  * This class holds drawing points to represent a gesture trail. The gesture trail may contain
@@ -35,7 +36,7 @@ import com.android.inputmethod.latin.common.ResizableIntArray;
  * Drawing points in this class will be asynchronously removed when fading out animation goes.
  */
 final class GestureTrailDrawingPoints {
-    public static final boolean DEBUG_SHOW_POINTS = false;
+    public static final boolean DEBUG_SHOW_POINTS = DebugFlags.DEBUG_ENABLED;
     public static final int POINT_TYPE_SAMPLED = 1;
     public static final int POINT_TYPE_INTERPOLATED = 2;
 

@@ -35,6 +35,7 @@ import AOSP.KEYBOARD.R;
 import com.android.inputmethod.compat.InputMethodSubtypeCompatUtils;
 import com.android.inputmethod.compat.ViewCompatUtils;
 import com.android.inputmethod.latin.RichInputMethodManager;
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.utils.AdditionalSubtypeUtils;
 import com.android.inputmethod.latin.utils.SubtypeLocaleUtils;
 
@@ -42,7 +43,7 @@ import java.util.TreeSet;
 
 final class CustomInputStylePreference extends DialogPreference
         implements DialogInterface.OnCancelListener {
-    private static final boolean DEBUG_SUBTYPE_ID = false;
+    private static final boolean DEBUG_SUBTYPE_ID = DebugFlags.DEBUG_ENABLED;
 
     interface Listener {
         public void onRemoveCustomInputStyle(CustomInputStylePreference stylePref);

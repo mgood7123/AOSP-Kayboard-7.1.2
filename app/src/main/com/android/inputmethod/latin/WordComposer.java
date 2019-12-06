@@ -214,6 +214,10 @@ public final class WordComposer {
         // TODO: compute where that puts us inside the events
     }
 
+    public final int getCursorPositionWithinWord() {
+        return mCursorPositionWithinWord;
+    }
+
     public boolean isCursorFrontOrMiddleOfComposingWord() {
         if (DBG && mCursorPositionWithinWord > mCodePointSize) {
             throw new RuntimeException("Wrong cursor position : " + mCursorPositionWithinWord

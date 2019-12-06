@@ -190,6 +190,7 @@ public final class UpdateHandler {
                 final String clientId = cursor.getString(0);
                 final String metadataUri =
                         MetadataDbHelper.getMetadataUriAsString(context, clientId);
+                PrivateLog.getInstance(context);
                 PrivateLog.log("Update for clientId " + DebugLogUtils.s(clientId));
                 DebugLogUtils.l("Update for clientId", clientId, " which uses URI ", metadataUri);
                 uris.add(metadataUri);
@@ -504,6 +505,7 @@ public final class UpdateHandler {
 
     private static void publishUpdateCycleCompletedEvent(final Context context) {
         // Even if this is not successful, we have to publish the new state.
+        PrivateLog.getInstance(context);
         PrivateLog.log("Publishing update cycle completed event");
         DebugLogUtils.l("Publishing update cycle completed event");
         for (UpdateEventListener listener : linkedCopyOfList(sUpdateEventListeners)) {
@@ -597,6 +599,7 @@ public final class UpdateHandler {
         }
 
         DebugLogUtils.l("Downloaded metadata :", newMetadata);
+        PrivateLog.getInstance(context);
         PrivateLog.log("Downloaded metadata\n" + newMetadata);
 
         final ActionBatch actions = computeUpgradeTo(context, clientId, newMetadata);
@@ -623,6 +626,7 @@ public final class UpdateHandler {
         // automatically by DownloadManager.
         DebugLogUtils.l("Downloaded a new word list :", downloadRecord.mAttributes.getAsString(
                 MetadataDbHelper.DESCRIPTION_COLUMN), "for", downloadRecord.mClientId);
+        PrivateLog.getInstance(context);
         PrivateLog.log("Downloaded a new word list with description : "
                 + downloadRecord.mAttributes.getAsString(MetadataDbHelper.DESCRIPTION_COLUMN)
                 + " for " + downloadRecord.mClientId);

@@ -221,6 +221,7 @@ public final class DictionaryService extends Service {
         // is still more recent than UPDATE_FREQUENCY_MILLIS, do nothing.
         if (!isLastUpdateAtLeastThisOld(context, UPDATE_FREQUENCY_MILLIS)) return;
 
+        PrivateLog.getInstance(context);
         PrivateLog.log("Date changed - registering alarm");
         AlarmManager alarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
 
@@ -246,6 +247,7 @@ public final class DictionaryService extends Service {
     private static boolean isLastUpdateAtLeastThisOld(final Context context, final long time) {
         final long now = System.currentTimeMillis();
         final long lastUpdate = MetadataDbHelper.getOldestUpdateTime(context);
+        PrivateLog.getInstance(context);
         PrivateLog.log("Last update was " + lastUpdate);
         return lastUpdate + time < now;
     }

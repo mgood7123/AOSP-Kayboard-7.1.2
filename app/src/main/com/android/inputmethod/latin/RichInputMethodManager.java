@@ -31,6 +31,7 @@ import android.view.inputmethod.InputMethodSubtype;
 import com.android.inputmethod.annotations.UsedForTesting;
 import com.android.inputmethod.compat.InputMethodManagerCompatWrapper;
 import com.android.inputmethod.compat.InputMethodSubtypeCompatUtils;
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.settings.Settings;
 import com.android.inputmethod.latin.utils.AdditionalSubtypeUtils;
 import com.android.inputmethod.latin.utils.LanguageOnSpacebarUtils;
@@ -55,7 +56,7 @@ import static com.android.inputmethod.latin.common.Constants.Subtype.KEYBOARD_MO
 // non final for easy mocking.
 public class RichInputMethodManager {
     private static final String TAG = RichInputMethodManager.class.getSimpleName();
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = DebugFlags.DEBUG_ENABLED;
 
     private RichInputMethodManager() {
         // This utility class is not publicly instantiable.

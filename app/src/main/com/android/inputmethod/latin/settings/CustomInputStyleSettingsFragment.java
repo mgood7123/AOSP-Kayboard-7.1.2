@@ -40,6 +40,7 @@ import android.widget.Toast;
 
 import AOSP.KEYBOARD.R;
 import com.android.inputmethod.latin.RichInputMethodManager;
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.utils.AdditionalSubtypeUtils;
 import com.android.inputmethod.latin.utils.DialogUtils;
 import com.android.inputmethod.latin.utils.IntentUtils;
@@ -52,7 +53,7 @@ public final class CustomInputStyleSettingsFragment extends PreferenceFragment
     private static final String TAG = CustomInputStyleSettingsFragment.class.getSimpleName();
     // Note: We would like to turn this debug flag true in order to see what input styles are
     // defined in a bug-report.
-    private static final boolean DEBUG_CUSTOM_INPUT_STYLES = true;
+    private static final boolean DEBUG_CUSTOM_INPUT_STYLES = DebugFlags.DEBUG_ENABLED;
 
     private RichInputMethodManager mRichImm;
     private SharedPreferences mPrefs;

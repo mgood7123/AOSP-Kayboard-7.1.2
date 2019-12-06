@@ -23,6 +23,7 @@ import android.view.KeyEvent;
 
 import AOSP.KEYBOARD.R;
 import com.android.inputmethod.keyboard.KeyboardSwitcher;
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.settings.Settings;
 
 import java.util.ArrayList;
@@ -36,7 +37,7 @@ import javax.annotation.Nonnull;
  */
 final class EmojiAltPhysicalKeyDetector {
     private static final String TAG = "EmojiAltPhysicalKeyDetector";
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = DebugFlags.DEBUG_ENABLED;
 
     private List<EmojiHotKeys> mHotKeysList;
 

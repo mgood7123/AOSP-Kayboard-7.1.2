@@ -21,6 +21,7 @@ import android.util.Log;
 
 import com.android.inputmethod.event.Event;
 import com.android.inputmethod.latin.common.Constants;
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.utils.CapsModeUtils;
 import com.android.inputmethod.latin.utils.RecapitalizeStatus;
 
@@ -38,11 +39,11 @@ import com.android.inputmethod.latin.utils.RecapitalizeStatus;
  */
 public final class KeyboardState {
     private static final String TAG = KeyboardState.class.getSimpleName();
-    private static final boolean DEBUG_EVENT = false;
-    private static final boolean DEBUG_INTERNAL_ACTION = false;
+    private static final boolean DEBUG_EVENT = DebugFlags.DEBUG_ENABLED;
+    private static final boolean DEBUG_INTERNAL_ACTION = DebugFlags.DEBUG_ENABLED;
 
     public interface SwitchActions {
-        public static final boolean DEBUG_ACTION = false;
+        public static final boolean DEBUG_ACTION = DebugFlags.DEBUG_ENABLED;
 
         public void setAlphabetKeyboard();
         public void setAlphabetManualShiftedKeyboard();
@@ -58,7 +59,7 @@ public final class KeyboardState {
          */
         public void requestUpdatingShiftState(final int autoCapsFlags, final int recapitalizeMode);
 
-        public static final boolean DEBUG_TIMER_ACTION = false;
+        public static final boolean DEBUG_TIMER_ACTION = DebugFlags.DEBUG_ENABLED;
 
         public void startDoubleTapShiftKeyTimer();
         public boolean isInDoubleTapShiftKeyTimeout();

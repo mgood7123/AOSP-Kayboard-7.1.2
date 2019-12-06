@@ -31,6 +31,7 @@ import com.android.inputmethod.keyboard.Key;
 import com.android.inputmethod.keyboard.KeyDetector;
 import com.android.inputmethod.keyboard.Keyboard;
 import com.android.inputmethod.keyboard.KeyboardView;
+import com.android.inputmethod.latin.define.DebugFlags;
 
 /**
  * This class represents a delegate that can be registered in a class that extends
@@ -45,7 +46,7 @@ import com.android.inputmethod.keyboard.KeyboardView;
 public class KeyboardAccessibilityDelegate<KV extends KeyboardView>
         extends AccessibilityDelegateCompat {
     private static final String TAG = KeyboardAccessibilityDelegate.class.getSimpleName();
-    protected static final boolean DEBUG_HOVER = false;
+    protected static final boolean DEBUG_HOVER = DebugFlags.DEBUG_ENABLED;
 
     protected final KV mKeyboardView;
     protected final KeyDetector mKeyDetector;

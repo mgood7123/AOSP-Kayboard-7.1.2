@@ -65,6 +65,9 @@ import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
+import com.android.inputmethod.predictive.engine.engine;
+
+import static java.lang.Thread.sleep;
 
 /**
  * This class manages the input logic.
@@ -617,6 +620,7 @@ public final class InputLogic {
         // A consumed event may have text to commit and an update to the composing state, so
         // we evaluate both. With some combiners, it's possible than an event contains both
         // and we enter both of the following if clauses.
+        Log.w(TAG, "CAN WE PREDICT HERE? " + getClass().getName() + ".handleConsumedEvent");
         final CharSequence textToCommit = event.getTextToCommit();
         if (!TextUtils.isEmpty(textToCommit)) {
             mConnection.commitText(textToCommit, 1);
@@ -643,6 +647,7 @@ public final class InputLogic {
      */
     private void handleFunctionalEvent(final Event event, final InputTransaction inputTransaction,
             final int currentKeyboardScriptId, final LatinIME.UIHandler handler) {
+        Log.w(TAG, "CAN WE PREDICT HERE? " + getClass().getName() + ".handleFunctionalEvent");
         switch (event.mKeyCode) {
             case Constants.CODE_DELETE:
                 handleBackspaceEvent(event, inputTransaction, currentKeyboardScriptId);
@@ -717,6 +722,7 @@ public final class InputLogic {
     private void handleNonFunctionalEvent(final Event event,
             final InputTransaction inputTransaction,
             final LatinIME.UIHandler handler) {
+        Log.w(TAG, "CAN WE PREDICT HERE? " + getClass().getName() + ".handleNonFunctionalEvent");
         inputTransaction.setDidAffectContents();
         switch (event.mCodePoint) {
             case Constants.CODE_ENTER:
@@ -762,10 +768,25 @@ public final class InputLogic {
     private void handleNonSpecialCharacterEvent(final Event event,
             final InputTransaction inputTransaction,
             final LatinIME.UIHandler handler) {
+        Log.w(TAG, "CAN WE PREDICT HERE? " + getClass().getName() + ".handleNonSpecialCharacterEvent");
         final int codePoint = event.mCodePoint;
         mSpaceState = SpaceState.NONE;
-        if (inputTransaction.mSettingsValues.isWordSeparator(codePoint)
-                || Character.getType(codePoint) == Character.OTHER_SYMBOL) {
+        if (
+                (
+                    // if Prediction Engine Version Two is disabled, invoke this
+                    !inputTransaction.mSettingsValues.mPredictionEngineVersionTwoEnabled && (
+                        inputTransaction.mSettingsValues.isWordSeparator(codePoint)
+                        || Character.getType(codePoint) == Character.OTHER_SYMBOL
+                    )
+                ) || (
+                      // otherwise, if Prediction Engine Version Two is enabled
+                      // and code point is a space or line feed, invoke this
+                      inputTransaction.mSettingsValues.mPredictionEngineVersionTwoEnabled && (
+                          StringUtils.newSingleCodePointString(codePoint).equals(" ") ||
+                          StringUtils.newSingleCodePointString(codePoint).equals("\n")
+                      )
+                )
+        ) {
             handleSeparatorEvent(event, inputTransaction, handler);
         } else {
             if (SpaceState.PHANTOM == inputTransaction.mSpaceState) {
@@ -793,7 +814,9 @@ public final class InputLogic {
      */
     private void handleNonSeparatorEvent(final Event event, final SettingsValues settingsValues,
             final InputTransaction inputTransaction) {
+        Log.w(TAG, "CAN WE PREDICT HERE? " + getClass().getName() + ".handleNonSeparatorEvent");
         final int codePoint = event.mCodePoint;
+
         // TODO: refactor this method to stop flipping isComposingWord around all the time, and
         // make it shorter (possibly cut into several pieces). Also factor
         // handleNonSpecialCharacterEvent which has the same name as other handle* methods but is
@@ -819,7 +842,8 @@ public final class InputLogic {
                     Constants.EVENT_BACKSPACE);
             resetEntireInputState(mConnection.getExpectedSelectionStart(),
                     mConnection.getExpectedSelectionEnd(), true /* clearSuggestionStrip */);
-            isComposingWord = false;
+            // if using Prediction Engine Version Two then keep composing, otherwise obey above
+            isComposingWord = settingsValues.mPredictionEngineVersionTwoEnabled;
         }
         // We want to find out whether to start composing a new word with this character. If so,
         // we need to reset the composing state and switch isComposingWord. The order of the
@@ -828,7 +852,15 @@ public final class InputLogic {
         if (!isComposingWord
         // We only start composing if this is a word code point. Essentially that means it's a
         // a letter or a word connector.
-                && settingsValues.isWordCodePoint(codePoint)
+                &&
+                    // if using Prediction Engine Version Two then start composing
+                    // even if this is not a word code point, otherwise obey above
+                (
+                        settingsValues.mPredictionEngineVersionTwoEnabled
+                        ? true
+                        : settingsValues.isWordCodePoint(codePoint)
+                )
+
         // We never go into composing state if suggestions are not requested.
                 && settingsValues.needsToLookupSuggestions() &&
         // In languages with spaces, we only start composing a word when we are not already
@@ -839,13 +871,20 @@ public final class InputLogic {
         // TODO: Cache the text after the cursor so we don't need to go to the InputConnection
         // each time. We are already doing this for getTextBeforeCursor().
                 (!settingsValues.mSpacingAndPunctuations.mCurrentLanguageHasSpaces
-                        || !mConnection.isCursorTouchingWord(settingsValues.mSpacingAndPunctuations,
+                        // if using Prediction Engine Version Two then start composing
+                        // even if the cursor is touching a word
+                        || settingsValues.mPredictionEngineVersionTwoEnabled
+                        ? true
+                        : !mConnection.isCursorTouchingWord(settingsValues.mSpacingAndPunctuations,
                                 !mConnection.hasSlowInputConnection() /* checkTextAfter */))) {
             // Reset entirely the composing state anyway, then start composing a new word unless
             // the character is a word connector. The idea here is, word connectors are not
             // separators and they should be treated as normal characters, except in the first
             // position where they should not start composing a word.
-            isComposingWord = !settingsValues.mSpacingAndPunctuations.isWordConnector(codePoint);
+            // if using Prediction Engine Version Two then keep composing, otherwise obey above
+            isComposingWord = settingsValues.mPredictionEngineVersionTwoEnabled
+                    ? true
+                    : !settingsValues.mSpacingAndPunctuations.isWordConnector(codePoint);
             // Here we don't need to reset the last composed word. It will be reset
             // when we commit this one, if we ever do; if on the other hand we backspace
             // it entirely and resume suggestions on the previous word, we'd like to still
@@ -858,6 +897,7 @@ public final class InputLogic {
             if (mWordComposer.isSingleLetter()) {
                 mWordComposer.setCapitalizedModeAtStartComposingTime(inputTransaction.mShiftState);
             }
+            new engine().onTextEntry(mWordComposer.getTypedWord(), engine.types.MULTI_CHARACTER);
             setComposingTextInternal(getTextWithUnderline(mWordComposer.getTypedWord()), 1);
         } else {
             final boolean swapWeakSpace = tryStripSpaceAndReturnWhetherShouldSwapInstead(event,
@@ -866,6 +906,8 @@ public final class InputLogic {
             if (swapWeakSpace && trySwapSwapperAndSpace(event, inputTransaction)) {
                 mSpaceState = SpaceState.WEAK;
             } else {
+                String codePointString = StringUtils.newSingleCodePointString(codePoint);
+                new engine().onTextEntry(codePointString, engine.types.SINGLE_CHARACTER);
                 sendKeyCodePoint(settingsValues, codePoint);
             }
         }
@@ -879,6 +921,7 @@ public final class InputLogic {
      */
     private void handleSeparatorEvent(final Event event, final InputTransaction inputTransaction,
             final LatinIME.UIHandler handler) {
+        Log.w(TAG, "CAN WE PREDICT HERE? " + getClass().getName() + ".handleSeparatorEvent");
         final int codePoint = event.mCodePoint;
         final SettingsValues settingsValues = inputTransaction.mSettingsValues;
         final boolean wasComposingWord = mWordComposer.isComposingWord();
@@ -896,6 +939,8 @@ public final class InputLogic {
                     mConnection.getExpectedSelectionEnd(), true /* clearSuggestionStrip */);
         }
         // isComposingWord() may have changed since we stored wasComposing
+        String codePointString = StringUtils.newSingleCodePointString(codePoint);
+        new engine().onTextEntry(codePointString, engine.types.SINGLE_CHARACTER);
         if (mWordComposer.isComposingWord()) {
             if (settingsValues.mAutoCorrectionEnabledPerUserSettings) {
                 final String separator = shouldAvoidSendingCode ? LastComposedWord.NOT_A_SEPARATOR
@@ -903,8 +948,7 @@ public final class InputLogic {
                 commitCurrentAutoCorrection(settingsValues, separator, handler);
                 inputTransaction.setDidAutoCorrect();
             } else {
-                commitTyped(settingsValues,
-                        StringUtils.newSingleCodePointString(codePoint));
+                commitTyped(settingsValues, codePointString);
             }
         }
 
@@ -989,6 +1033,11 @@ public final class InputLogic {
      */
     private void handleBackspaceEvent(final Event event, final InputTransaction inputTransaction,
             final int currentKeyboardScriptId) {
+        Log.w(TAG, "CAN WE PREDICT HERE? " + getClass().getName() + ".handleBackspaceEvent");
+
+        // there is A LOT to go through here
+        new engine().onBackspace("some text", engine.types.BACKSPACE);
+
         mSpaceState = SpaceState.NONE;
         mDeleteCount++;
 
@@ -1481,7 +1530,13 @@ public final class InputLogic {
                         // Show new suggestions if we have at least one. Otherwise keep the old
                         // suggestions with the new typed word. Exception: if the length of the
                         // typed word is <= 1 (after a deletion typically) we clear old suggestions.
-                        if (suggestedWords.size() > 1 || typedWordString.length() <= 1) {
+
+                        // always show new suggestions if Predictive Engine Version Two is enabled
+                        if (
+                                settingsValues.mPredictionEngineVersionTwoEnabled ||
+                                suggestedWords.size() > 1 ||
+                                typedWordString.length() <= 1
+                        ) {
                             holder.set(suggestedWords);
                         } else {
                             holder.set(retrieveOlderSuggestions(typedWordInfo, mSuggestedWords));
@@ -2263,8 +2318,6 @@ public final class InputLogic {
                     sequenceNumber,
                     callback);
         } else {
-            Log.w(TAG, "TODO: get input from predictive engine");
-
             mSuggest.getSuggestedWords(
                     true,
                     mWordComposer,

@@ -32,6 +32,7 @@ import android.util.Log;
 
 import AOSP.KEYBOARD.R;
 import com.android.inputmethod.latin.common.LocaleUtils;
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.utils.DebugLogUtils;
 
 import java.io.File;
@@ -48,7 +49,7 @@ import java.util.HashMap;
  */
 public final class DictionaryProvider extends ContentProvider {
     private static final String TAG = DictionaryProvider.class.getSimpleName();
-    public static final boolean DEBUG = false;
+    public static final boolean DEBUG = DebugFlags.DEBUG_ENABLED;
 
     public Uri CONTENT_URI;
     private static final String QUERY_PARAMETER_MAY_PROMPT_USER = "mayPrompt";
@@ -198,6 +199,7 @@ public final class DictionaryProvider extends ContentProvider {
      */
     @Override
     public String getType(final Uri uri) {
+        PrivateLog.getInstance(getContext());
         PrivateLog.log("Asked for type of : " + uri);
         final int match = matchUri(uri);
         switch (match) {
@@ -229,6 +231,7 @@ public final class DictionaryProvider extends ContentProvider {
     public Cursor query(final Uri uri, final String[] projection, final String selection,
             final String[] selectionArgs, final String sortOrder) {
         DebugLogUtils.l("Uri =", uri);
+        PrivateLog.getInstance(getContext());
         PrivateLog.log("Query : " + uri);
         final String clientId = getClientId(uri);
         final int match = matchUri(uri);
@@ -237,6 +240,7 @@ public final class DictionaryProvider extends ContentProvider {
             case DICTIONARY_V2_WHOLE_LIST:
                 final Cursor c = MetadataDbHelper.queryDictionaries(getContext(), clientId);
                 DebugLogUtils.l("List of dictionaries with count", c.getCount());
+                PrivateLog.getInstance(getContext());
                 PrivateLog.log("Returned a list of " + c.getCount() + " items");
                 return c;
             case DICTIONARY_V2_DICT_INFO:
@@ -251,9 +255,11 @@ public final class DictionaryProvider extends ContentProvider {
                 // TODO: pass clientId to the following function
                 DictionaryService.updateNowIfNotUpdatedInAVeryLongTime(getContext());
                 if (null != dictFiles && dictFiles.size() > 0) {
+                    PrivateLog.getInstance(getContext());
                     PrivateLog.log("Returned " + dictFiles.size() + " files");
                     return new ResourcePathCursor(dictFiles);
                 }
+                PrivateLog.getInstance(getContext());
                 PrivateLog.log("No dictionary files for this URL");
                 return new ResourcePathCursor(Collections.<WordListInfo>emptyList());
             // V2_METADATA and V2_DATAFILE are not supported for query()
@@ -494,6 +500,7 @@ public final class DictionaryProvider extends ContentProvider {
     public Uri insert(final Uri uri, final ContentValues values)
             throws UnsupportedOperationException {
         if (null == uri || null == values) return null; // Should never happen but let's be safe
+        PrivateLog.getInstance(getContext());
         PrivateLog.log("Insert, uri = " + uri.toString());
         final String clientId = getClientId(uri);
         switch (matchUri(uri)) {
@@ -523,6 +530,7 @@ public final class DictionaryProvider extends ContentProvider {
                 break;
             case DICTIONARY_V1_WHOLE_LIST:
             case DICTIONARY_V1_DICT_INFO:
+                PrivateLog.getInstance(getContext());
                 PrivateLog.log("Attempt to insert : " + uri);
                 throw new UnsupportedOperationException(
                         "Insertion in the dictionary is not supported in this version");
@@ -538,6 +546,7 @@ public final class DictionaryProvider extends ContentProvider {
     @Override
     public int update(final Uri uri, final ContentValues values, final String selection,
             final String[] selectionArgs) throws UnsupportedOperationException {
+        PrivateLog.getInstance(getContext());
         PrivateLog.log("Attempt to update : " + uri);
         throw new UnsupportedOperationException("Updating dictionary words is not supported");
     }

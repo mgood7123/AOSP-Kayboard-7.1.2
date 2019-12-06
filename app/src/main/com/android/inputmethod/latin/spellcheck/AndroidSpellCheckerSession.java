@@ -28,6 +28,7 @@ import android.view.textservice.TextInfo;
 
 import com.android.inputmethod.compat.TextInfoCompatUtils;
 import com.android.inputmethod.latin.NgramContext;
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.utils.SpannableStringUtils;
 
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ import java.util.Locale;
 
 public final class AndroidSpellCheckerSession extends AndroidWordLevelSpellCheckerSession {
     private static final String TAG = AndroidSpellCheckerSession.class.getSimpleName();
-    private static final boolean DBG = false;
+    private static final boolean DBG = DebugFlags.DEBUG_ENABLED;
     private final Resources mResources;
     private SentenceLevelAdapter mSentenceLevelAdapter;
 

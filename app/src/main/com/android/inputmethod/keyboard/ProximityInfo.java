@@ -21,6 +21,7 @@ import android.util.Log;
 
 import com.android.inputmethod.keyboard.internal.TouchPositionCorrection;
 import com.android.inputmethod.latin.common.Constants;
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.utils.JniUtils;
 
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ import javax.annotation.Nonnull;
 
 public class ProximityInfo {
     private static final String TAG = ProximityInfo.class.getSimpleName();
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = DebugFlags.DEBUG_ENABLED;
 
     // Must be equal to MAX_PROXIMITY_CHARS_SIZE in native/jni/src/defines.h
     public static final int MAX_PROXIMITY_CHARS_SIZE = 16;

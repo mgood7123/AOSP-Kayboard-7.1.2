@@ -23,6 +23,7 @@ import com.android.inputmethod.annotations.UsedForTesting;
 import com.android.inputmethod.latin.SuggestedWords.SuggestedWordInfo;
 import com.android.inputmethod.latin.common.ComposedData;
 import com.android.inputmethod.latin.common.FileUtils;
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.define.DecoderSpecificConstants;
 import com.android.inputmethod.latin.makedict.DictionaryHeader;
 import com.android.inputmethod.latin.makedict.FormatSpec;
@@ -57,7 +58,7 @@ import javax.annotation.Nullable;
  *   getDictionary(Context context, Locale locale, File dictFile, String dictNamePrefix)
  */
 abstract public class ExpandableBinaryDictionary extends Dictionary {
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = DebugFlags.DEBUG_ENABLED;
 
     /** Used for Log actions from this class */
     private static final String TAG = ExpandableBinaryDictionary.class.getSimpleName();

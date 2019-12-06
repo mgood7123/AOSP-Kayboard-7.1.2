@@ -18,6 +18,8 @@ package com.android.inputmethod.latin.network;
 
 import android.util.Log;
 
+import com.android.inputmethod.latin.define.DebugFlags;
+
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +34,7 @@ import javax.annotation.Nullable;
  * This must never be called from the main thread.
  */
 public class BlockingHttpClient {
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = DebugFlags.DEBUG_ENABLED;
     private static final String TAG = BlockingHttpClient.class.getSimpleName();
 
     private final HttpURLConnection mConnection;

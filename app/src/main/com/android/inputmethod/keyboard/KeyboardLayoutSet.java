@@ -36,6 +36,7 @@ import com.android.inputmethod.keyboard.internal.KeyboardParams;
 import com.android.inputmethod.keyboard.internal.UniqueKeysCache;
 import com.android.inputmethod.latin.InputAttributes;
 import com.android.inputmethod.latin.RichInputMethodSubtype;
+import com.android.inputmethod.latin.define.DebugFlags;
 import com.android.inputmethod.latin.utils.InputTypeUtils;
 import com.android.inputmethod.latin.utils.ScriptUtils;
 import com.android.inputmethod.latin.utils.SubtypeLocaleUtils;
@@ -63,7 +64,7 @@ import static com.android.inputmethod.latin.common.Constants.ImeOption.NO_SETTIN
  */
 public final class KeyboardLayoutSet {
     private static final String TAG = KeyboardLayoutSet.class.getSimpleName();
-    private static final boolean DEBUG_CACHE = false;
+    private static final boolean DEBUG_CACHE = DebugFlags.DEBUG_ENABLED;
 
     private static final String TAG_KEYBOARD_SET = "KeyboardLayoutSet";
     private static final String TAG_ELEMENT = "Element";
