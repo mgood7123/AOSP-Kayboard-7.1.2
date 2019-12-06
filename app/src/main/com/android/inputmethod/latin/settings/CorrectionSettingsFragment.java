@@ -92,7 +92,10 @@ public final class CorrectionSettingsFragment extends SubScreenFragment
         turnOffUseContactsIfNoPermission();
 
         SharedPreferences sharedPreferences = getSharedPreferences();
-        if (sharedPreferences.getBoolean(Settings.PREF_PREDICTIVE_ENGINE_VERSION_TWO, false)) {
+        if (
+                sharedPreferences.getBoolean(Settings.PREF_PREDICTIVE_ENGINE_VERSION_TWO,
+                getResources().getBoolean(R.bool.config_predictive_engine_version_two))
+        ) {
             setPreferenceDisabled(Settings.PREF_BLOCK_POTENTIALLY_OFFENSIVE);
             setPreferenceDisabled(Settings.PREF_AUTO_CORRECTION);
             setPreferenceDisabled(Settings.PREF_SHOW_SUGGESTIONS);

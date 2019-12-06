@@ -75,6 +75,7 @@ public class SettingsValues {
     public final boolean mBlockPotentiallyOffensive;
     // Use bigrams to predict the next word when there is no input for it yet
     public final boolean mBigramPredictionEnabled;
+    public final boolean mPredictionEngineVersionTwoEnabled;
     public final boolean mGestureInputEnabled;
     public final boolean mGestureTrailEnabled;
     public final boolean mGestureFloatingPreviewTextEnabled;
@@ -155,6 +156,7 @@ public class SettingsValues {
                 ? res.getString(R.string.auto_correction_threshold_mode_index_modest)
                 : res.getString(R.string.auto_correction_threshold_mode_index_off);
         mBigramPredictionEnabled = readBigramPredictionEnabled(prefs, res);
+        mPredictionEngineVersionTwoEnabled = readPredictionEngineVersionTwoEnabled(prefs, res);
         mDoubleSpacePeriodTimeout = res.getInteger(R.integer.config_double_space_period_timeout);
         mHasHardwareKeyboard = Settings.readHasHardwareKeyboard(res.getConfiguration());
         mEnableMetricsLogging = prefs.getBoolean(Settings.PREF_ENABLE_METRICS_LOGGING, true);
@@ -316,9 +318,15 @@ public class SettingsValues {
     }
 
     private static boolean readBigramPredictionEnabled(final SharedPreferences prefs,
-            final Resources res) {
+                                                       final Resources res) {
         return prefs.getBoolean(Settings.PREF_BIGRAM_PREDICTIONS, res.getBoolean(
                 R.bool.config_default_next_word_prediction));
+    }
+
+    private static boolean readPredictionEngineVersionTwoEnabled(final SharedPreferences prefs,
+            final Resources res) {
+        return prefs.getBoolean(Settings.PREF_PREDICTIVE_ENGINE_VERSION_TWO, res.getBoolean(
+                R.bool.config_predictive_engine_version_two));
     }
 
     private static float readAutoCorrectionThreshold(final Resources res,

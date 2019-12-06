@@ -17,6 +17,7 @@
 package com.android.inputmethod.latin;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.android.inputmethod.keyboard.Keyboard;
 import com.android.inputmethod.latin.SuggestedWords.SuggestedWordInfo;
@@ -95,16 +96,18 @@ public final class Suggest {
         public void onGetSuggestedWords(final SuggestedWords suggestedWords);
     }
 
-    public void getSuggestedWords(final WordComposer wordComposer,
+    public void getSuggestedWords(final boolean isUsingPredictiveEngineVersionTwo, final WordComposer wordComposer,
             final NgramContext ngramContext, final Keyboard keyboard,
             final SettingsValuesForSuggestion settingsValuesForSuggestion,
             final boolean isCorrectionEnabled, final int inputStyle, final int sequenceNumber,
             final OnGetSuggestedWordsCallback callback) {
         if (wordComposer.isBatchMode()) {
-            getSuggestedWordsForBatchInput(wordComposer, ngramContext, keyboard,
+            Log.w(TAG, "BATCH MODE SUGGESTION");
+            getSuggestedWordsForBatchInput(isUsingPredictiveEngineVersionTwo, wordComposer, ngramContext, keyboard,
                     settingsValuesForSuggestion, inputStyle, sequenceNumber, callback);
         } else {
-            getSuggestedWordsForNonBatchInput(wordComposer, ngramContext, keyboard,
+            Log.w(TAG, "NON BATCH MODE SUGGESTION");
+            getSuggestedWordsForNonBatchInput(isUsingPredictiveEngineVersionTwo, wordComposer, ngramContext, keyboard,
                     settingsValuesForSuggestion, inputStyle, isCorrectionEnabled,
                     sequenceNumber, callback);
         }
@@ -149,12 +152,41 @@ public final class Suggest {
 
     // Retrieves suggestions for non-batch input (typing, recorrection, predictions...)
     // and calls the callback function with the suggestions.
-    private void getSuggestedWordsForNonBatchInput(final WordComposer wordComposer,
+    private void getSuggestedWordsForNonBatchInput(
+            final boolean isUsingPredictiveEngineVersionTwo, final WordComposer wordComposer,
             final NgramContext ngramContext, final Keyboard keyboard,
             final SettingsValuesForSuggestion settingsValuesForSuggestion,
             final int inputStyleIfNotPrediction, final boolean isCorrectionEnabled,
             final int sequenceNumber, final OnGetSuggestedWordsCallback callback) {
         final String typedWordString = wordComposer.getTypedWord();
+        if (isUsingPredictiveEngineVersionTwo) {
+            final boolean isTypedWordValid = false;
+
+            final SuggestedWordInfo typedWordInfo = new SuggestedWordInfo(
+                    typedWordString,
+                    "",
+                    SuggestedWordInfo.MAX_SCORE,
+                    SuggestedWordInfo.KIND_TYPED,
+                    Dictionary.DICTIONARY_USER_TYPED,
+                    SuggestedWordInfo.NOT_AN_INDEX /* indexOfTouchPointOfSecondWord */,
+                    SuggestedWordInfo.NOT_A_CONFIDENCE /* autoCommitFirstWordConfidence */);
+            final ArrayList<SuggestedWordInfo> suggestionsList = new ArrayList(0);
+            suggestionsList.add(typedWordInfo);
+            suggestionsList.add(typedWordInfo);
+            callback.onGetSuggestedWords(
+                    new SuggestedWords(
+                            suggestionsList,
+                            null,
+                            typedWordInfo,
+                            isTypedWordValid,
+                            true,
+                            false,
+                            SuggestedWords.INPUT_STYLE_PREDICTION,
+                            sequenceNumber
+                    )
+            );
+            return;
+        }
         final int trailingSingleQuotesCount =
                 StringUtils.getTrailingSingleQuotesCount(typedWordString);
         final String consideredWord = trailingSingleQuotesCount > 0
@@ -286,7 +318,8 @@ public final class Suggest {
 
     // Retrieves suggestions for the batch input
     // and calls the callback function with the suggestions.
-    private void getSuggestedWordsForBatchInput(final WordComposer wordComposer,
+    private void getSuggestedWordsForBatchInput(
+            final boolean isUsingPredictiveEngineVersionTwo, final WordComposer wordComposer,
             final NgramContext ngramContext, final Keyboard keyboard,
             final SettingsValuesForSuggestion settingsValuesForSuggestion,
             final int inputStyle, final int sequenceNumber,
