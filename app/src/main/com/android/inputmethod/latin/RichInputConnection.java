@@ -65,8 +65,8 @@ public final class RichInputConnection implements PrivateCommandPerformer {
     private static final boolean DBG = DebugFlags.DEBUG_ENABLED;
     private static final boolean DEBUG_PREVIOUS_TEXT = DebugFlags.DEBUG_ENABLED;
     private static final boolean DEBUG_BATCH_NESTING = DebugFlags.DEBUG_ENABLED;
-    private static final int NUM_CHARS_TO_GET_BEFORE_CURSOR = 40;
-    private static final int NUM_CHARS_TO_GET_AFTER_CURSOR = 40;
+    public static final int NUM_CHARS_TO_GET_BEFORE_CURSOR = 40;
+    public static final int NUM_CHARS_TO_GET_AFTER_CURSOR = 40;
     private static final int INVALID_CURSOR_POSITION = -1;
 
     /**
@@ -78,11 +78,11 @@ public final class RichInputConnection implements PrivateCommandPerformer {
      * The amount of time a {@link #getTextBeforeCursor} or {@link #getTextAfterCursor} call needs
      * to take for the keyboard to enter the {@link #hasSlowInputConnection} state.
      */
-    private static final long SLOW_INPUT_CONNECTION_ON_PARTIAL_RELOAD_MS = 200;
+    public static final long SLOW_INPUT_CONNECTION_ON_PARTIAL_RELOAD_MS = 200;
 
     private static final int OPERATION_GET_TEXT_BEFORE_CURSOR = 0;
     private static final int OPERATION_GET_TEXT_AFTER_CURSOR = 1;
-    private static final int OPERATION_GET_WORD_RANGE_AT_CURSOR = 2;
+    public static final int OPERATION_GET_WORD_RANGE_AT_CURSOR = 2;
     private static final int OPERATION_RELOAD_TEXT_CACHE = 3;
     private static final String[] OPERATION_NAMES = new String[] {
             "GET_TEXT_BEFORE_CURSOR",
@@ -126,8 +126,8 @@ public final class RichInputConnection implements PrivateCommandPerformer {
      */
     private SpannableStringBuilder mTempObjectForCommitText = new SpannableStringBuilder();
 
-    private final InputMethodService mParent;
-    private InputConnection mIC;
+    public final InputMethodService mParent;
+    public InputConnection mIC;
     private int mNestLevel;
 
     /**
@@ -430,7 +430,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
                 n, flags);
     }
 
-    private CharSequence getTextBeforeCursorAndDetectLaggyConnection(
+    public CharSequence getTextBeforeCursorAndDetectLaggyConnection(
             final int operation, final long timeout, final int n, final int flags) {
         mIC = mParent.getCurrentInputConnection();
         if (!isConnected()) {
@@ -449,7 +449,7 @@ public final class RichInputConnection implements PrivateCommandPerformer {
                 n, flags);
     }
 
-    private CharSequence getTextAfterCursorAndDetectLaggyConnection(
+    public CharSequence getTextAfterCursorAndDetectLaggyConnection(
             final int operation, final long timeout, final int n, final int flags) {
         mIC = mParent.getCurrentInputConnection();
         if (!isConnected()) {

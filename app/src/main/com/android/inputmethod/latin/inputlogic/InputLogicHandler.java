@@ -29,7 +29,7 @@ import com.android.inputmethod.latin.common.InputPointers;
 /**
  * A helper to manage deferred tasks for the input logic.
  */
-class InputLogicHandler implements Handler.Callback {
+public class InputLogicHandler implements Handler.Callback {
     final Handler mNonUIThreadHandler;
     // TODO: remove this reference.
     final LatinIME mLatinIME;

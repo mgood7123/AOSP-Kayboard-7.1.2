@@ -74,11 +74,11 @@ public final class InputLogic {
     private static final String TAG = InputLogic.class.getSimpleName();
 
     // TODO : Remove this member when we can.
-    final LatinIME mLatinIME;
+    public final LatinIME mLatinIME;
     public final SuggestionStripViewAccessor mSuggestionStripViewAccessor;
 
     // Never null.
-    private InputLogicHandler mInputLogicHandler = InputLogicHandler.NULL_HANDLER;
+    public InputLogicHandler mInputLogicHandler = InputLogicHandler.NULL_HANDLER;
 
     // TODO : make all these fields private as soon as possible.
     // Current space state of the input method. This can be any of the above constants.
@@ -90,7 +90,7 @@ public final class InputLogic {
 
     public LastComposedWord mLastComposedWord = LastComposedWord.NOT_A_COMPOSED_WORD;
     // This has package visibility so it can be accessed from InputLogicHandler.
-    /* package */ final WordComposer mWordComposer;
+    /* package */ public final WordComposer mWordComposer;
     public final RichInputConnection mConnection;
     private final RecapitalizeStatus mRecapitalizeStatus = new RecapitalizeStatus();
 
@@ -447,7 +447,6 @@ public final class InputLogic {
                     latinIME,
                     isHardwareKey,
                     this,
-                    mWordComposer,
                     settingsValues,
                     event,
                     keyboardShiftMode,
@@ -1637,7 +1636,7 @@ public final class InputLogic {
         }
     }
 
-    void doShowSuggestionsAndClearAutoCorrectionIndicator(final SuggestedWords suggestedWords) {
+    public void doShowSuggestionsAndClearAutoCorrectionIndicator(final SuggestedWords suggestedWords) {
         mIsAutoCorrectionIndicatorOn = false;
         mLatinIME.mHandler.showSuggestionStrip(suggestedWords);
     }
@@ -1835,7 +1834,7 @@ public final class InputLogic {
      * @param word the word to evaluate.
      * @return whether it's fine to resume suggestions on this word.
      */
-    private static boolean isResumableWord(final SettingsValues settings, final String word) {
+    public static boolean isResumableWord(final SettingsValues settings, final String word) {
         final int firstCodePoint = word.codePointAt(0);
         return settings.isWordCodePoint(firstCodePoint)
                 && Constants.CODE_SINGLE_QUOTE != firstCodePoint

@@ -170,6 +170,7 @@ public final class Suggest {
             final SettingsValuesForSuggestion settingsValuesForSuggestion,
             final int inputStyleIfNotPrediction, final boolean isCorrectionEnabled,
             final int sequenceNumber, final OnGetSuggestedWordsCallback callback) {
+        // non gesture input (swipe typing) (aka normal typing)
         final String typedWordString = wordComposer.getTypedWord();
         if (isUsingPredictiveEngineVersionTwo) {
             final boolean isTypedWordValid = false;
@@ -177,11 +178,13 @@ public final class Suggest {
             new engine().onSuggestion(typedWordString, engine.types.NO_TYPE);
             new engine().info(typedWordString,
                     "mCursorPositionWithinWord: " + wordComposer.getCursorPositionWithinWord());
+            // if there are more then one characters,
+            // and there exists only one suggestion,
+            // then the current word is the only suggestion
+
             // fill the list
-            suggestionsList.add(newWord("1"));
-            suggestionsList.add(newWord("2"));
-            suggestionsList.add(newWord("3"));
-            suggestionsList.add(newWord("4"));
+            suggestionsList.add(newWord("suggestion one"));
+            suggestionsList.add(newWord("suggestion two"));
 
             callback.onGetSuggestedWords(
                     new SuggestedWords(
@@ -334,6 +337,7 @@ public final class Suggest {
             final SettingsValuesForSuggestion settingsValuesForSuggestion,
             final int inputStyle, final int sequenceNumber,
             final OnGetSuggestedWordsCallback callback) {
+        // gesture input (swipe typing)
         final SuggestionResults suggestionResults = mDictionaryFacilitator.getSuggestionResults(
                 wordComposer.getComposedDataSnapshot(), ngramContext, keyboard,
                 settingsValuesForSuggestion, SESSION_ID_GESTURE, inputStyle);
