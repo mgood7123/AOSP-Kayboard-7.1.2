@@ -40,6 +40,8 @@ import static com.android.inputmethod.latin.common.Constants.ImeOption.NO_MICROP
 
 public final class engine {
 
+    // suggestion strip updates are triggered by updateStateAfterInputTransaction
+
     public void handleNonSpecialCharacterEvent(
             final InputLogic inputLogic, final WordComposer wordComposer,
             final SettingsValues settingsValues, @Nonnull final Event currentEvent,
@@ -485,7 +487,8 @@ public final class engine {
         }
     }
 
-    public InputTransaction process(
+    public void process(
+            final LatinIME latinIME, final boolean isHardwareKey,
             final InputLogic inputLogic, final WordComposer wordComposer,
             final SettingsValues settingsValues, @Nonnull final Event unprocessedEvent,
             final int keyboardShiftMode, final int spaceState,
@@ -648,7 +651,10 @@ public final class engine {
             inputLogic.mEnteredText = null;
         }
         inputLogic.mConnection.endBatchEdit();
-        return inputTransaction;
+        if (!isHardwareKey) {
+            print("updating suggestions");
+            latinIME.updateStateAfterInputTransaction(inputTransaction);
+        }
     }
 
     public void processUI(LatinIME latinIME, EditorInfo editorInfo, boolean restarting) {

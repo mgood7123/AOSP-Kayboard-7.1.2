@@ -1411,11 +1411,9 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         if (Constants.CODE_SHORTCUT == event.mKeyCode) {
             mRichImm.switchToShortcutIme(this);
         }
-        final InputTransaction completeInputTransaction =
-                mInputLogic.onCodeInput(mSettings.getCurrent(), event,
-                        mKeyboardSwitcher.getKeyboardShiftMode(),
-                        mKeyboardSwitcher.getCurrentKeyboardScriptId(), mHandler);
-        updateStateAfterInputTransaction(completeInputTransaction);
+        mInputLogic.onCodeInput(this, false, mSettings.getCurrent(), event,
+                mKeyboardSwitcher.getKeyboardShiftMode(),
+                mKeyboardSwitcher.getCurrentKeyboardScriptId(), mHandler);
         mKeyboardSwitcher.onEvent(event, getCurrentAutoCapsState(), getCurrentRecapitalizeState());
     }
 
@@ -1595,12 +1593,11 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     // interface
     @Override
     public void pickSuggestionManually(final SuggestedWordInfo suggestionInfo) {
-        final InputTransaction completeInputTransaction = mInputLogic.onPickSuggestionManually(
+        mInputLogic.onPickSuggestionManually(this,
                 mSettings.getCurrent(), suggestionInfo,
                 mKeyboardSwitcher.getKeyboardShiftMode(),
                 mKeyboardSwitcher.getCurrentKeyboardScriptId(),
                 mHandler);
-        updateStateAfterInputTransaction(completeInputTransaction);
     }
 
     // This will show either an empty suggestion strip (if prediction is enabled) or
@@ -1642,7 +1639,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
      * inputTransaction to find out what is necessary and updates the state accordingly.
      * @param inputTransaction The transaction that has been executed.
      */
-    private void updateStateAfterInputTransaction(final InputTransaction inputTransaction) {
+    public void updateStateAfterInputTransaction(final InputTransaction inputTransaction) {
         switch (inputTransaction.getRequiredShiftUpdate()) {
         case InputTransaction.SHIFT_UPDATE_LATER:
             mHandler.postUpdateShiftState();
@@ -1739,7 +1736,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         // If the event is not handled by LatinIME, we just pass it to the parent implementation.
         // If it's handled, we return true because we did handle it.
         if (event.isHandled()) {
-            mInputLogic.onCodeInput(mSettings.getCurrent(), event,
+            mInputLogic.onCodeInput(this, true, mSettings.getCurrent(), event,
                     mKeyboardSwitcher.getKeyboardShiftMode(),
                     // TODO: this is not necessarily correct for a hardware keyboard right now
                     mKeyboardSwitcher.getCurrentKeyboardScriptId(),

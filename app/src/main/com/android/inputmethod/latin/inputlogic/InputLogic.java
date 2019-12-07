@@ -271,7 +271,7 @@ public final class InputLogic {
      */
     // Called from {@link SuggestionStripView} through the {@link SuggestionStripView#Listener}
     // interface
-    public InputTransaction onPickSuggestionManually(final SettingsValues settingsValues,
+    public void onPickSuggestionManually(final LatinIME latinIME, final SettingsValues settingsValues,
             final SuggestedWordInfo suggestionInfo, final int keyboardShiftState,
             final int currentKeyboardScriptId, final LatinIME.UIHandler handler) {
         final SuggestedWords suggestedWords = mSuggestedWords;
@@ -284,8 +284,9 @@ public final class InputLogic {
             // Word separators are suggested before the user inputs something.
             // Rely on onCodeInput to do the complicated swapping/stripping logic consistently.
             final Event event = Event.createPunctuationSuggestionPickedEvent(suggestionInfo);
-            return onCodeInput(settingsValues, event, keyboardShiftState,
+            onCodeInput(mLatinIME,false, settingsValues, event, keyboardShiftState,
                     currentKeyboardScriptId, handler);
+            return;
         }
 
         final Event event = Event.createSuggestionPickedEvent(suggestionInfo);
@@ -317,7 +318,8 @@ public final class InputLogic {
             resetComposingState(true /* alsoResetLastComposedWord */);
             mConnection.commitCompletion(suggestionInfo.mApplicationSpecifiedCompletionInfo);
             mConnection.endBatchEdit();
-            return inputTransaction;
+            latinIME.updateStateAfterInputTransaction(inputTransaction);
+            return;
         }
 
         commitChosenWord(settingsValues, suggestion, LastComposedWord.COMMIT_TYPE_MANUAL_PICK,
@@ -337,7 +339,7 @@ public final class InputLogic {
                 mSuggestedWords, suggestionInfo, mDictionaryFacilitator);
         StatsUtils.onWordCommitSuggestionPickedManually(
                 suggestionInfo.mWord, mWordComposer.isBatchMode());
-        return inputTransaction;
+        latinIME.updateStateAfterInputTransaction(inputTransaction);
     }
 
     /**
@@ -429,17 +431,21 @@ public final class InputLogic {
      * Typically, this is called whenever a key is pressed on the software keyboard. This is not
      * the entry point for gesture input; see the onBatchInput* family of functions for this.
      *
+     * @param isHardwareKey this indicates whether the input is from a hardware device
+     *                      such as a Bluetooth/USB keyboard
      * @param settingsValues the current settings values.
      * @param event the event to handle.
      * @param keyboardShiftMode the current shift mode of the keyboard, as returned by
      *     {@link KeyboardSwitcher#getKeyboardShiftMode()}
      * @return the complete transaction object
      */
-    public InputTransaction onCodeInput(final SettingsValues settingsValues,
-            @Nonnull final Event event, final int keyboardShiftMode,
-            final int currentKeyboardScriptId, final LatinIME.UIHandler handler) {
+    public void onCodeInput(final LatinIME latinIME, final boolean isHardwareKey, final SettingsValues settingsValues,
+                                        @Nonnull final Event event, final int keyboardShiftMode,
+                                        final int currentKeyboardScriptId, final LatinIME.UIHandler handler) {
         if (settingsValues.mPredictionEngineVersionTwoEnabled) {
-            return new engine().process(
+            new engine().process(
+                    latinIME,
+                    isHardwareKey,
                     this,
                     mWordComposer,
                     settingsValues,
@@ -499,7 +505,7 @@ public final class InputLogic {
                 mEnteredText = null;
             }
             mConnection.endBatchEdit();
-            return inputTransaction;
+            if (!isHardwareKey) mLatinIME.updateStateAfterInputTransaction(inputTransaction);
         }
     }
 
