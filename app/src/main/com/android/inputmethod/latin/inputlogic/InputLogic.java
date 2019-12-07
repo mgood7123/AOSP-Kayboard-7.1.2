@@ -101,7 +101,7 @@ public final class InputLogic {
     public final TreeSet<Long> mCurrentlyPressedHardwareKeys = new TreeSet<>();
 
     // Keeps track of most recently inserted text (multi-character key) for reverting
-    private String mEnteredText;
+    public String mEnteredText;
 
     // TODO: This boolean is persistent state and causes large side effects at unexpected times.
     // Find a way to remove it for readability.
@@ -440,57 +440,69 @@ public final class InputLogic {
     public InputTransaction onCodeInput(final SettingsValues settingsValues,
             @Nonnull final Event event, final int keyboardShiftMode,
             final int currentKeyboardScriptId, final LatinIME.UIHandler handler) {
-        mWordBeingCorrectedByCursor = null;
-        final Event processedEvent = mWordComposer.processEvent(event);
-        final InputTransaction inputTransaction = new InputTransaction(settingsValues,
-                processedEvent, SystemClock.uptimeMillis(), mSpaceState,
-                getActualCapsMode(settingsValues, keyboardShiftMode));
-        if (processedEvent.mKeyCode != Constants.CODE_DELETE
-                || inputTransaction.mTimestamp > mLastKeyTime + Constants.LONG_PRESS_MILLISECONDS) {
-            mDeleteCount = 0;
-        }
-        mLastKeyTime = inputTransaction.mTimestamp;
-        mConnection.beginBatchEdit();
-        if (!mWordComposer.isComposingWord()) {
-            // TODO: is this useful? It doesn't look like it should be done here, but rather after
-            // a word is committed.
-            mIsAutoCorrectionIndicatorOn = false;
-        }
-
-        // TODO: Consolidate the double-space period timer, mLastKeyTime, and the space state.
-        if (processedEvent.mCodePoint != Constants.CODE_SPACE) {
-            cancelDoubleSpacePeriodCountdown();
-        }
-
-        Event currentEvent = processedEvent;
-        while (null != currentEvent) {
-            if (currentEvent.isConsumed()) {
-                handleConsumedEvent(currentEvent, inputTransaction);
-            } else if (currentEvent.isFunctionalKeyEvent()) {
-                handleFunctionalEvent(currentEvent, inputTransaction, currentKeyboardScriptId,
-                        handler);
-            } else {
-                handleNonFunctionalEvent(currentEvent, inputTransaction, handler);
+        if (settingsValues.mPredictionEngineVersionTwoEnabled) {
+            return new engine().process(
+                    this,
+                    mWordComposer,
+                    settingsValues,
+                    event,
+                    keyboardShiftMode,
+                    mSpaceState,
+                    currentKeyboardScriptId,
+                    handler);
+        } else {
+            mWordBeingCorrectedByCursor = null;
+            final Event processedEvent = mWordComposer.processEvent(event);
+            final InputTransaction inputTransaction = new InputTransaction(settingsValues,
+                    processedEvent, SystemClock.uptimeMillis(), mSpaceState,
+                    getActualCapsMode(settingsValues, keyboardShiftMode));
+            if (processedEvent.mKeyCode != Constants.CODE_DELETE
+                    || inputTransaction.mTimestamp > mLastKeyTime + Constants.LONG_PRESS_MILLISECONDS) {
+                mDeleteCount = 0;
             }
-            currentEvent = currentEvent.mNextEvent;
+            mLastKeyTime = inputTransaction.mTimestamp;
+            mConnection.beginBatchEdit();
+            if (!mWordComposer.isComposingWord()) {
+                // TODO: is this useful? It doesn't look like it should be done here, but rather after
+                // a word is committed.
+                mIsAutoCorrectionIndicatorOn = false;
+            }
+
+            // TODO: Consolidate the double-space period timer, mLastKeyTime, and the space state.
+            if (processedEvent.mCodePoint != Constants.CODE_SPACE) {
+                cancelDoubleSpacePeriodCountdown();
+            }
+
+            Event currentEvent = processedEvent;
+            while (null != currentEvent) {
+                if (currentEvent.isConsumed()) {
+                    handleConsumedEvent(currentEvent, inputTransaction);
+                } else if (currentEvent.isFunctionalKeyEvent()) {
+                    handleFunctionalEvent(currentEvent, inputTransaction, currentKeyboardScriptId,
+                            handler);
+                } else {
+                    handleNonFunctionalEvent(currentEvent, inputTransaction, handler);
+                }
+                currentEvent = currentEvent.mNextEvent;
+            }
+            // Try to record the word being corrected when the user enters a word character or
+            // the backspace key.
+            if (!mConnection.hasSlowInputConnection() && !mWordComposer.isComposingWord()
+                    && (settingsValues.isWordCodePoint(processedEvent.mCodePoint) ||
+                    processedEvent.mKeyCode == Constants.CODE_DELETE)) {
+                mWordBeingCorrectedByCursor = getWordAtCursor(
+                        settingsValues, currentKeyboardScriptId);
+            }
+            if (!inputTransaction.didAutoCorrect() && processedEvent.mKeyCode != Constants.CODE_SHIFT
+                    && processedEvent.mKeyCode != Constants.CODE_CAPSLOCK
+                    && processedEvent.mKeyCode != Constants.CODE_SWITCH_ALPHA_SYMBOL)
+                mLastComposedWord.deactivate();
+            if (Constants.CODE_DELETE != processedEvent.mKeyCode) {
+                mEnteredText = null;
+            }
+            mConnection.endBatchEdit();
+            return inputTransaction;
         }
-        // Try to record the word being corrected when the user enters a word character or
-        // the backspace key.
-        if (!mConnection.hasSlowInputConnection() && !mWordComposer.isComposingWord()
-                && (settingsValues.isWordCodePoint(processedEvent.mCodePoint) ||
-                        processedEvent.mKeyCode == Constants.CODE_DELETE)) {
-            mWordBeingCorrectedByCursor = getWordAtCursor(
-                   settingsValues, currentKeyboardScriptId);
-        }
-        if (!inputTransaction.didAutoCorrect() && processedEvent.mKeyCode != Constants.CODE_SHIFT
-                && processedEvent.mKeyCode != Constants.CODE_CAPSLOCK
-                && processedEvent.mKeyCode != Constants.CODE_SWITCH_ALPHA_SYMBOL)
-            mLastComposedWord.deactivate();
-        if (Constants.CODE_DELETE != processedEvent.mKeyCode) {
-            mEnteredText = null;
-        }
-        mConnection.endBatchEdit();
-        return inputTransaction;
     }
 
     public void onStartBatchInput(final SettingsValues settingsValues,
@@ -616,7 +628,7 @@ public final class InputLogic {
      * @param event The event to handle.
      * @param inputTransaction The transaction in progress.
      */
-    private void handleConsumedEvent(final Event event, final InputTransaction inputTransaction) {
+    public void handleConsumedEvent(final Event event, final InputTransaction inputTransaction) {
         // A consumed event may have text to commit and an update to the composing state, so
         // we evaluate both. With some combiners, it's possible than an event contains both
         // and we enter both of the following if clauses.
@@ -645,8 +657,8 @@ public final class InputLogic {
      * @param event The event to handle.
      * @param inputTransaction The transaction in progress.
      */
-    private void handleFunctionalEvent(final Event event, final InputTransaction inputTransaction,
-            final int currentKeyboardScriptId, final LatinIME.UIHandler handler) {
+    public void handleFunctionalEvent(final Event event, final InputTransaction inputTransaction,
+                                      final int currentKeyboardScriptId, final LatinIME.UIHandler handler) {
         Log.w(TAG, "CAN WE PREDICT HERE? " + getClass().getName() + ".handleFunctionalEvent");
         switch (event.mKeyCode) {
             case Constants.CODE_DELETE:
@@ -719,9 +731,9 @@ public final class InputLogic {
      * @param event The event to handle.
      * @param inputTransaction The transaction in progress.
      */
-    private void handleNonFunctionalEvent(final Event event,
-            final InputTransaction inputTransaction,
-            final LatinIME.UIHandler handler) {
+    public void handleNonFunctionalEvent(final Event event,
+                                         final InputTransaction inputTransaction,
+                                         final LatinIME.UIHandler handler) {
         Log.w(TAG, "CAN WE PREDICT HERE? " + getClass().getName() + ".handleNonFunctionalEvent");
         inputTransaction.setDidAffectContents();
         switch (event.mCodePoint) {
@@ -1784,8 +1796,8 @@ public final class InputLogic {
      *   KeyboardSwitcher#getKeyboardShiftMode() for possible values.
      * @return the actual caps mode the keyboard is in right now.
      */
-    private int getActualCapsMode(final SettingsValues settingsValues,
-            final int keyboardShiftMode) {
+    public int getActualCapsMode(final SettingsValues settingsValues,
+                                 final int keyboardShiftMode) {
         if (keyboardShiftMode != WordComposer.CAPS_MODE_AUTO_SHIFTED) {
             return keyboardShiftMode;
         }
@@ -2321,9 +2333,16 @@ public final class InputLogic {
             mSuggest.getSuggestedWords(
                     true,
                     mWordComposer,
-                    null,
+                    // this is needed for gesture input (swipe typing)
+                    getNgramContextFromNthPreviousWordForSuggestion(
+                            settingsValues.mSpacingAndPunctuations,
+                            // Get the word on which we should search the bigrams. If we are composing
+                            // a word, it's whatever is *before* the half-committed word in the buffer,
+                            // hence 2; if we aren't, we should just skip whitespace if any, so 1.
+                            mWordComposer.isComposingWord() ? 2 : 1),
                     keyboard,
-                    null,
+                    // this is needed for gesture input (swipe typing)
+                    new SettingsValuesForSuggestion(settingsValues.mBlockPotentiallyOffensive),
                     false,
                     inputStyle,
                     sequenceNumber,
