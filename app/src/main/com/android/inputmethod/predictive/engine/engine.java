@@ -8,6 +8,8 @@ import android.text.TextUtils;
 import android.text.style.SuggestionSpan;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.inputmethod.CompletionInfo;
+import android.view.inputmethod.CorrectionInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodSubtype;
@@ -71,26 +73,24 @@ public final class engine {
                     && !settingsValues.mSpacingAndPunctuations.mCurrentLanguageHasSpaces
                     && wasComposingWord;
             if (inputLogic.mWordComposer.isCursorFrontOrMiddleOfComposingWord()) {
+                print("is space or new line, commit something");
                 // If we are in the middle of a recorrection, we need to commit the recorrection
                 // first so that we can insert the separator at the current cursor position.
                 // We also need to unlearn the original word that is now being corrected.
+
                 inputLogic.unlearnWord(inputLogic.mWordComposer.getTypedWord(), inputTransaction.mSettingsValues,
                         Constants.EVENT_BACKSPACE);
                 inputLogic.resetEntireInputState(inputLogic.mConnection.getExpectedSelectionStart(),
-                        inputLogic.mConnection.getExpectedSelectionEnd(), true /* clearSuggestionStrip */);
+                        inputLogic.mConnection.getExpectedSelectionEnd(), true);
             }
             // isComposingWord() may have changed since we stored wasComposing
-            String codePointString = StringUtils.newSingleCodePointString(codePoint);
-            if (inputLogic.mWordComposer.isComposingWord()) {
-                if (settingsValues.mAutoCorrectionEnabledPerUserSettings) {
-                    final String separator = shouldAvoidSendingCode ? LastComposedWord.NOT_A_SEPARATOR
-                            : StringUtils.newSingleCodePointString(codePoint);
-                    inputLogic.commitCurrentAutoCorrection(settingsValues, separator, handler);
-                    inputTransaction.setDidAutoCorrect();
-                } else {
-                    inputLogic.commitTyped(settingsValues, codePointString);
-                }
-            }
+            if (inputLogic.mWordComposer.isComposingWord())
+                onCommitNormal(
+                        inputLogic, inputTransaction, shouldAvoidSendingCode,
+                        settingsValues.mAutoCorrectionEnabledPerUserSettings,
+                        StringUtils.newSingleCodePointString(codePoint),
+                        settingsValues, handler
+                );
 
             final boolean swapWeakSpace = inputLogic.tryStripSpaceAndReturnWhetherShouldSwapInstead(currentEvent,
                     inputTransaction);
@@ -167,6 +167,7 @@ public final class engine {
         } else {
             if (SpaceState.PHANTOM == inputTransaction.mSpaceState) {
                 if (inputLogic.mWordComposer.isCursorFrontOrMiddleOfComposingWord()) {
+                    print("is NOT space or new line, commit on phantom space");
                     // If we are in the middle of a recorrection, we need to commit the recorrection
                     // first so that we can insert the character at the current cursor position.
                     // We also need to unlearn the original word that is now being corrected.
@@ -175,7 +176,12 @@ public final class engine {
                     inputLogic.resetEntireInputState(inputLogic.mConnection.getExpectedSelectionStart(),
                             inputLogic.mConnection.getExpectedSelectionEnd(), true /* clearSuggestionStrip */);
                 } else {
-                    inputLogic.commitTyped(inputTransaction.mSettingsValues, LastComposedWord.NOT_A_SEPARATOR);
+                    print("is NOT space or new line, commit typed");
+                    onCommitConnection(
+                            inputLogic, inputTransaction,
+                            LastComposedWord.NOT_A_SEPARATOR,
+                            inputTransaction.mSettingsValues
+                    );
                 }
             }
 
@@ -184,13 +190,13 @@ public final class engine {
             final int codePoint2 = currentEvent.mCodePoint;
 
             // TODO: refactor this method to stop flipping isComposingWord around all the time, and
-            // make it shorter (possibly cut into several pieces). Also factor
-            // handleNonSpecialCharacterEvent which has the same name as other handle* methods but is
-            // not the same.
+            //  make it shorter (possibly cut into several pieces). Also factor
+            //  handleNonSpecialCharacterEvent which has the same name as other handle* methods but
+            //  is not the same.
             boolean isComposingWord = inputLogic.mWordComposer.isComposingWord();
 
             // TODO: remove isWordConnector() and use isUsuallyFollowedBySpace() instead.
-            // See onStartBatchInput() to see how to do it.
+            //  See onStartBatchInput() to see how to do it.
             if (SpaceState.PHANTOM == inputTransaction.mSpaceState
                     && !settingsValues.isWordConnector(codePoint2)) {
                 if (isComposingWord) {
@@ -232,7 +238,7 @@ public final class engine {
                     // can incur a very expensive getTextAfterCursor() lookup, potentially making the
                     // keyboard UI slow and non-responsive.
                     // TODO: Cache the text after the cursor so we don't need to go to the InputConnection
-                    // each time. We are already doing this for getTextBeforeCursor().
+                    //  each time. We are already doing this for getTextBeforeCursor().
                     (!settingsValues.mSpacingAndPunctuations.mCurrentLanguageHasSpaces
                             // if predictionAllowNonWords is true then start composing even if
                             // the cursor is touching a word
@@ -279,6 +285,156 @@ public final class engine {
         }
     }
 
+    private void onCommitCompletion(
+            final LatinIME latinIME, final CompletionInfo mApplicationSpecifiedCompletionInfo
+    ) {
+        onCommit(
+                latinIME, mApplicationSpecifiedCompletionInfo, null,
+                null, false, false,
+                null, null, 0,null,
+                null, false, true, false
+        );
+    }
+
+    private void onCommitConnection(
+            final InputLogic inputLogic, final InputTransaction inputTransaction,
+            final String whatToCommit, SettingsValues settingsValues
+    ) {
+        onCommit(
+                null, null, inputLogic,
+                inputTransaction, false, false,
+                whatToCommit, null, 0, settingsValues, null,
+                true, false, false
+        );
+    }
+
+    private void onCommitNormal(
+            final InputLogic inputLogic, final InputTransaction inputTransaction,
+            final boolean shouldAutoCorrect, final boolean shouldAvoidSendingCode,
+            final String whatToCommit, final SettingsValues settingsValues,
+            final LatinIME.UIHandler handler
+    ) {
+        onCommit(
+                null, null, inputLogic, inputTransaction,
+                shouldAvoidSendingCode, settingsValues.mAutoCorrectionEnabledPerUserSettings,
+                whatToCommit, null, 0, settingsValues,
+                handler, false, false, false
+        );
+    }
+
+    private void onCommitSuggestion(
+            final LatinIME latinIME, final SettingsValues settingsValues, final String suggestion,
+            final int commitTypeManualPick, final String separatorString) {
+        onCommit(
+                latinIME, null, null, null,
+                false, false, suggestion, separatorString,
+                commitTypeManualPick, settingsValues, null,
+                false, false, true
+        );
+    }
+
+    private void onCommitSuggestion(
+            final InputLogic inputLogic, final SettingsValues settingsValues,
+            final String suggestion, final int commitTypeManualPick, final String separatorString) {
+        onCommit(
+                null, null, inputLogic, null,
+                false, false, suggestion, separatorString,
+                commitTypeManualPick, settingsValues, null,
+                false, true, true
+        );
+    }
+
+    private void onCommit(
+            final LatinIME latinIME, final CompletionInfo mApplicationSpecifiedCompletionInfo,
+            final InputLogic inputLogic, final InputTransaction inputTransaction,
+            final boolean shouldAutoCorrect, final boolean shouldAvoidSendingCode,
+            final String whatToCommit, final String separatorString,
+            final int commitTypeManualPick, final SettingsValues settingsValues,
+            final LatinIME.UIHandler handler, final boolean useConnection,
+            final boolean isCompletion, final boolean isSuggestion
+    ) {
+        // TODO: handle adding a new suggestion on each word commit
+        print("onCommit");
+        if (isSuggestion) {
+            if (isCompletion) {
+                print("commit is a suggestion from completion");
+                inputLogic.commitChosenWord(
+                        settingsValues, whatToCommit, commitTypeManualPick, separatorString
+                );
+            } else {
+                print("commit is a suggestion");
+                latinIME.mInputLogic.commitChosenWord(
+                        settingsValues, whatToCommit, commitTypeManualPick, separatorString
+                );
+            }
+        } else if (isCompletion) {
+            print("commit is a completion");
+            latinIME.mInputLogic.mConnection.commitCompletion(mApplicationSpecifiedCompletionInfo);
+        }
+        else if (shouldAutoCorrect) {
+            print("commit is an auto correction");
+            final String separator = shouldAvoidSendingCode ? LastComposedWord.NOT_A_SEPARATOR
+                    : whatToCommit;
+            print("is space or new line, commit AutoCorrection");
+            // Complete any pending suggestions query first
+            if (handler.hasPendingUpdateSuggestions()) {
+                handler.cancelUpdateSuggestionStrip();
+                // To know the input style here, we should retrieve the in-flight "update suggestions"
+                // message and read its arg1 member here. However, the Handler class does not let
+                // us retrieve this message, so we can't do that. But in fact, we notice that
+                // we only ever come here when the input style was typing. In the case of batch
+                // input, we update the suggestions synchronously when the tail batch comes. Likewise
+                // for application-specified completions. As for recorrections, we never auto-correct,
+                // so we don't come here either. Hence, the input style is necessarily
+                // INPUT_STYLE_TYPING.
+                inputLogic.performUpdateSuggestionStripSync(settingsValues, SuggestedWords.INPUT_STYLE_TYPING);
+            }
+            final SuggestedWords.SuggestedWordInfo autoCorrectionOrNull = inputLogic.mWordComposer.getAutoCorrectionOrNull();
+            final String typedWord = inputLogic.mWordComposer.getTypedWord();
+            final String stringToCommit = (autoCorrectionOrNull != null)
+                    ? autoCorrectionOrNull.mWord : typedWord;
+            if (stringToCommit != null) {
+                if (TextUtils.isEmpty(typedWord)) {
+                    throw new RuntimeException("We have an auto-correction but the typed word "
+                            + "is empty? Impossible! I must commit suicide.");
+                }
+                final boolean isBatchMode = inputLogic.mWordComposer.isBatchMode();
+                onCommitSuggestion(inputLogic, settingsValues, stringToCommit,
+                        LastComposedWord.COMMIT_TYPE_DECIDED_WORD, separator);
+                if (!typedWord.equals(stringToCommit)) {
+                    // This will make the correction flash for a short while as a visual clue
+                    // to the user that auto-correction happened. It has no other effect; in particular
+                    // note that this won't affect the text inside the text field AT ALL: it only makes
+                    // the segment of text starting at the supplied index and running for the length
+                    // of the auto-correction flash. At this moment, the "typedWord" argument is
+                    // ignored by TextView.
+                    inputLogic.mConnection.commitCorrection(new CorrectionInfo(
+                            inputLogic.mConnection.getExpectedSelectionEnd() - stringToCommit.length(),
+                            typedWord, stringToCommit));
+                    String prevWordsContext = (autoCorrectionOrNull != null)
+                            ? autoCorrectionOrNull.mPrevWordsContext
+                            : "";
+                    StatsUtils.onAutoCorrection(typedWord, stringToCommit, isBatchMode,
+                            inputLogic.mDictionaryFacilitator, prevWordsContext);
+                    StatsUtils.onWordCommitAutoCorrect(stringToCommit, isBatchMode);
+                } else {
+                    StatsUtils.onWordCommitUserTyped(stringToCommit, isBatchMode);
+                }
+            }
+            inputTransaction.setDidAutoCorrect();
+        } else {
+            if (useConnection) {
+                print("commit is from a consumed event");
+                inputLogic.mConnection.commitText(whatToCommit, 1);
+                inputTransaction.setDidAffectContents();
+            } else {
+                print("commit is normal");
+                print("is space or new line, commit typed");
+                inputLogic.commitTyped(settingsValues, whatToCommit);
+            }
+        }
+    }
+
     /**
      * Handle a press on the backspace key.
      * @param currentEvent The event to handle.
@@ -289,6 +445,7 @@ public final class engine {
             @Nonnull final Event currentEvent, final InputTransaction inputTransaction,
             final int currentKeyboardScriptId
     ) {
+        // TODO: handle removing suggestions on backspace?
         inputLogic.mSpaceState = SpaceState.NONE;
         inputLogic.mDeleteCount++;
 
@@ -518,8 +675,9 @@ public final class engine {
                 // and we enter both of the following if clauses.
                 final CharSequence textToCommit = currentEvent.getTextToCommit();
                 if (!TextUtils.isEmpty(textToCommit)) {
-                    inputLogic.mConnection.commitText(textToCommit, 1);
-                    inputTransaction.setDidAffectContents();
+                    onCommitConnection(
+                            inputLogic, inputTransaction, textToCommit.toString(), settingsValues
+                    );
                 }
                 if (inputLogic.mWordComposer.isComposingWord()) {
                     inputLogic.setComposingTextInternal(inputLogic.mWordComposer.getTypedWord(), 1);
@@ -820,7 +978,7 @@ public final class engine {
             }
         } else if (restarting) {
             // TODO: Come up with a more comprehensive way to reset the keyboard layout when
-            // a keyboard layout set doesn't get reloaded in this method.
+            //  a keyboard layout set doesn't get reloaded in this method.
             switcher.resetKeyboardStateToAlphabet(latinIME.getCurrentAutoCapsState(),
                     latinIME.getCurrentRecapitalizeState());
             // In apps like Talk, we come here when the text is sent and the field gets emptied and
@@ -862,6 +1020,8 @@ public final class engine {
     public void restartSuggestionsOnWordTouchedByCursor(
             final InputLogic inputLogic, final SettingsValues settingsValues,
             final boolean forStartInput, final int currentKeyboardScriptId) {
+        // TODO: should we handle spelling correction suggestions?
+        print("restartSuggestionsOnWordTouchedByCursor");
         // HACK: We may want to special-case some apps that exhibit bad behavior in case of
         // recorrection. This is a temporary, stopgap measure that will be removed later.
         // TODO: remove this.
@@ -1122,6 +1282,90 @@ public final class engine {
                 latinIME.switchLanguage((InputMethodSubtype)msg.obj);
                 break;
         }
+    }
+
+    /**
+     * A suggestion was picked from the suggestion strip.
+     * @param settingsValues the current values of the settings.
+     * @param suggestionInfo the suggestion info.
+     * @param keyboardShiftState the shift state of the keyboard, as returned by
+     *     {@link KeyboardSwitcher#getKeyboardShiftMode()}
+     * @return the complete transaction object
+     */
+    // Called from {@link SuggestionStripView} through the {@link SuggestionStripView#Listener}
+    // interface
+    public void onPickSuggestionManually(final LatinIME latinIME, final SettingsValues settingsValues,
+                                         final SuggestedWords.SuggestedWordInfo suggestionInfo, final int keyboardShiftState,
+                                         final int currentKeyboardScriptId, final LatinIME.UIHandler handler) {
+        final SuggestedWords suggestedWords = latinIME.mInputLogic.mSuggestedWords;
+        final String suggestion = suggestionInfo.mWord;
+        // If this is a punctuation picked from the suggestion strip, pass it to onCodeInput
+        if (suggestion.length() == 1 && suggestedWords.isPunctuationSuggestions()) {
+            // We still want to log a suggestion click.
+            StatsUtils.onPickSuggestionManually(
+                    latinIME.mInputLogic.mSuggestedWords, suggestionInfo, latinIME.mInputLogic.mDictionaryFacilitator);
+            // Word separators are suggested before the user inputs something.
+            // Rely on onCodeInput to do the complicated swapping/stripping logic consistently.
+            final Event event = Event.createPunctuationSuggestionPickedEvent(suggestionInfo);
+            latinIME.mInputLogic.onCodeInput(latinIME.mInputLogic.mLatinIME,false, settingsValues, event, keyboardShiftState,
+                    currentKeyboardScriptId, handler);
+            return;
+        }
+
+        final Event event = Event.createSuggestionPickedEvent(suggestionInfo);
+        final InputTransaction inputTransaction = new InputTransaction(settingsValues,
+                event, SystemClock.uptimeMillis(), latinIME.mInputLogic.mSpaceState, keyboardShiftState);
+        // Manual pick affects the contents of the editor, so we take note of this. It's important
+        // for the sequence of language switching.
+        inputTransaction.setDidAffectContents();
+        latinIME.mInputLogic.mConnection.beginBatchEdit();
+        if (SpaceState.PHANTOM == latinIME.mInputLogic.mSpaceState && suggestion.length() > 0
+                // In the batch input mode, a manually picked suggested word should just replace
+                // the current batch input text and there is no need for a phantom space.
+                && !latinIME.mInputLogic.mWordComposer.isBatchMode()) {
+            final int firstChar = Character.codePointAt(suggestion, 0);
+            if (!settingsValues.isWordSeparator(firstChar)
+                    || settingsValues.isUsuallyPrecededBySpace(firstChar)) {
+                latinIME.mInputLogic.insertAutomaticSpaceIfOptionsAndTextAllow(settingsValues);
+            }
+        }
+
+        // TODO: We should not need the following branch. We should be able to take the same
+        //  code path as for other kinds, use commitChosenWord, and do everything normally. We will
+        //  however need to reset the suggestion strip right away, because we know we can't take
+        //  the risk of calling commitCompletion twice because we don't know how the app will react.
+        if (suggestionInfo.isKindOf(SuggestedWords.SuggestedWordInfo.KIND_APP_DEFINED)) {
+            latinIME.mInputLogic.mSuggestedWords = SuggestedWords.getEmptyInstance();
+            latinIME.mInputLogic.mSuggestionStripViewAccessor.setNeutralSuggestionStrip();
+            inputTransaction.requireShiftUpdate(InputTransaction.SHIFT_UPDATE_NOW);
+            latinIME.mInputLogic.resetComposingState(true /* alsoResetLastComposedWord */);
+            onCommitCompletion(latinIME, suggestionInfo.mApplicationSpecifiedCompletionInfo);
+            latinIME.mInputLogic.mConnection.endBatchEdit();
+            latinIME.updateStateAfterInputTransaction(inputTransaction);
+            return;
+        }
+        print("commit chosen word: " + suggestion);
+        onCommitSuggestion(
+                latinIME, settingsValues, suggestion,
+                LastComposedWord.COMMIT_TYPE_MANUAL_PICK,
+                LastComposedWord.NOT_A_SEPARATOR
+        );
+        latinIME.mInputLogic.mConnection.endBatchEdit();
+        // Don't allow cancellation of manual pick
+        latinIME.mInputLogic.mLastComposedWord.deactivate();
+        // Space state must be updated before calling updateShiftState
+        latinIME.mInputLogic.mSpaceState = SpaceState.PHANTOM;
+        inputTransaction.requireShiftUpdate(InputTransaction.SHIFT_UPDATE_NOW);
+
+        // If we're not showing the "Touch again to save", then update the suggestion strip.
+        // That's going to be predictions (or punctuation suggestions), so INPUT_STYLE_NONE.
+        handler.postUpdateSuggestionStrip(SuggestedWords.INPUT_STYLE_NONE);
+
+        StatsUtils.onPickSuggestionManually(
+                latinIME.mInputLogic.mSuggestedWords, suggestionInfo, latinIME.mInputLogic.mDictionaryFacilitator);
+        StatsUtils.onWordCommitSuggestionPickedManually(
+                suggestionInfo.mWord, latinIME.mInputLogic.mWordComposer.isBatchMode());
+        latinIME.updateStateAfterInputTransaction(inputTransaction);
     }
 
     public static final class types {

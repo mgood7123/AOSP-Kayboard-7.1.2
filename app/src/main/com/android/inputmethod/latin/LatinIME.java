@@ -1595,7 +1595,13 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     // interface
     @Override
     public void pickSuggestionManually(final SuggestedWordInfo suggestionInfo) {
-        mInputLogic.onPickSuggestionManually(this,
+        if (mSettings.getCurrent().mPredictionEngineVersionTwoEnabled)
+            new engine().onPickSuggestionManually(this,
+                    mSettings.getCurrent(), suggestionInfo,
+                    mKeyboardSwitcher.getKeyboardShiftMode(),
+                    mKeyboardSwitcher.getCurrentKeyboardScriptId(),
+                    mHandler);
+        else mInputLogic.onPickSuggestionManually(this,
                 mSettings.getCurrent(), suggestionInfo,
                 mKeyboardSwitcher.getKeyboardShiftMode(),
                 mKeyboardSwitcher.getCurrentKeyboardScriptId(),
@@ -1608,8 +1614,6 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     public void setNeutralSuggestionStrip() {
         final SettingsValues currentSettings = mSettings.getCurrent();
         if (currentSettings.mPredictionEngineVersionTwoEnabled) {
-            // TODO: DETERMINE WHEN THIS IS CALLED
-            Log.i(TAG, "setNeutralSuggestionStrip");
             setSuggestedWords(SuggestedWords.getEmptyInstance());
         } else setSuggestedWords(
                 currentSettings.mBigramPredictionEnabled
