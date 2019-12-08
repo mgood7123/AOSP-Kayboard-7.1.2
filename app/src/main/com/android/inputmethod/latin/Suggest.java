@@ -17,7 +17,6 @@
 package com.android.inputmethod.latin;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.android.inputmethod.keyboard.Keyboard;
 import com.android.inputmethod.latin.SuggestedWords.SuggestedWordInfo;
@@ -28,7 +27,6 @@ import com.android.inputmethod.latin.settings.SettingsValuesForSuggestion;
 import com.android.inputmethod.latin.utils.AutoCorrectionUtils;
 import com.android.inputmethod.latin.utils.BinaryDictionaryUtils;
 import com.android.inputmethod.latin.utils.SuggestionResults;
-import com.android.inputmethod.predictive.engine.engine;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,7 +36,6 @@ import javax.annotation.Nonnull;
 
 import static com.android.inputmethod.latin.define.DecoderSpecificConstants.SHOULD_AUTO_CORRECT_USING_NON_WHITE_LISTED_SUGGESTION;
 import static com.android.inputmethod.latin.define.DecoderSpecificConstants.SHOULD_REMOVE_PREVIOUSLY_REJECTED_SUGGESTION;
-import static java.lang.Thread.sleep;
 
 /**
  * This class loads a dictionary and provides a list of suggestions for a given sequence of
@@ -98,18 +95,16 @@ public final class Suggest {
         public void onGetSuggestedWords(final SuggestedWords suggestedWords);
     }
 
-    public void getSuggestedWords(final boolean isUsingPredictiveEngineVersionTwo, final WordComposer wordComposer,
+    public void getSuggestedWords(final WordComposer wordComposer,
             final NgramContext ngramContext, final Keyboard keyboard,
             final SettingsValuesForSuggestion settingsValuesForSuggestion,
             final boolean isCorrectionEnabled, final int inputStyle, final int sequenceNumber,
             final OnGetSuggestedWordsCallback callback) {
         if (wordComposer.isBatchMode()) {
-            Log.w(TAG, "BATCH MODE SUGGESTION");
-            getSuggestedWordsForBatchInput(isUsingPredictiveEngineVersionTwo, wordComposer, ngramContext, keyboard,
+            getSuggestedWordsForBatchInput(wordComposer, ngramContext, keyboard,
                     settingsValuesForSuggestion, inputStyle, sequenceNumber, callback);
         } else {
-            Log.w(TAG, "NON BATCH MODE SUGGESTION");
-            getSuggestedWordsForNonBatchInput(isUsingPredictiveEngineVersionTwo, wordComposer, ngramContext, keyboard,
+            getSuggestedWordsForNonBatchInput(wordComposer, ngramContext, keyboard,
                     settingsValuesForSuggestion, inputStyle, isCorrectionEnabled,
                     sequenceNumber, callback);
         }
@@ -152,54 +147,14 @@ public final class Suggest {
         return firstSuggestedWordInfo;
     }
 
-    private final SuggestedWordInfo newWord(String word) {
-        return new SuggestedWordInfo(
-                word, "",
-                SuggestedWordInfo.MAX_SCORE,
-                SuggestedWordInfo.KIND_TYPED,
-                Dictionary.DICTIONARY_USER_TYPED,
-                SuggestedWordInfo.NOT_AN_INDEX /* indexOfTouchPointOfSecondWord */,
-                SuggestedWordInfo.NOT_A_CONFIDENCE /* autoCommitFirstWordConfidence */);
-    }
-
     // Retrieves suggestions for non-batch input (typing, recorrection, predictions...)
     // and calls the callback function with the suggestions.
-    private void getSuggestedWordsForNonBatchInput(
-            final boolean isUsingPredictiveEngineVersionTwo, final WordComposer wordComposer,
+    private void getSuggestedWordsForNonBatchInput(final WordComposer wordComposer,
             final NgramContext ngramContext, final Keyboard keyboard,
             final SettingsValuesForSuggestion settingsValuesForSuggestion,
             final int inputStyleIfNotPrediction, final boolean isCorrectionEnabled,
             final int sequenceNumber, final OnGetSuggestedWordsCallback callback) {
-        // non gesture input (swipe typing) (aka normal typing)
         final String typedWordString = wordComposer.getTypedWord();
-        if (isUsingPredictiveEngineVersionTwo) {
-            final boolean isTypedWordValid = false;
-            final ArrayList<SuggestedWordInfo> suggestionsList = new ArrayList(0);
-            new engine().onSuggestion(typedWordString, engine.types.NO_TYPE);
-            new engine().info(typedWordString,
-                    "mCursorPositionWithinWord: " + wordComposer.getCursorPositionWithinWord());
-            // if there are more then one characters,
-            // and there exists only one suggestion,
-            // then the current word is the only suggestion
-
-            // fill the list
-            suggestionsList.add(newWord("suggestion one"));
-            suggestionsList.add(newWord("suggestion two"));
-
-            callback.onGetSuggestedWords(
-                    new SuggestedWords(
-                            suggestionsList,
-                            null,
-                            null,
-                            false,
-                            false,
-                            false,
-                            SuggestedWords.INPUT_STYLE_PREDICTION,
-                            sequenceNumber
-                    )
-            );
-            return;
-        }
         final int trailingSingleQuotesCount =
                 StringUtils.getTrailingSingleQuotesCount(typedWordString);
         final String consideredWord = trailingSingleQuotesCount > 0
@@ -331,13 +286,11 @@ public final class Suggest {
 
     // Retrieves suggestions for the batch input
     // and calls the callback function with the suggestions.
-    private void getSuggestedWordsForBatchInput(
-            final boolean isUsingPredictiveEngineVersionTwo, final WordComposer wordComposer,
-            final NgramContext ngramContext, final Keyboard keyboard,
-            final SettingsValuesForSuggestion settingsValuesForSuggestion,
-            final int inputStyle, final int sequenceNumber,
-            final OnGetSuggestedWordsCallback callback) {
-        // gesture input (swipe typing)
+    public void getSuggestedWordsForBatchInput(final WordComposer wordComposer,
+                                               final NgramContext ngramContext, final Keyboard keyboard,
+                                               final SettingsValuesForSuggestion settingsValuesForSuggestion,
+                                               final int inputStyle, final int sequenceNumber,
+                                               final OnGetSuggestedWordsCallback callback) {
         final SuggestionResults suggestionResults = mDictionaryFacilitator.getSuggestionResults(
                 wordComposer.getComposedDataSnapshot(), ngramContext, keyboard,
                 settingsValuesForSuggestion, SESSION_ID_GESTURE, inputStyle);

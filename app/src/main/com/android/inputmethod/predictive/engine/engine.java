@@ -15,12 +15,14 @@ import android.view.inputmethod.InputMethodSubtype;
 import com.android.inputmethod.accessibility.AccessibilityUtils;
 import com.android.inputmethod.event.Event;
 import com.android.inputmethod.event.InputTransaction;
+import com.android.inputmethod.keyboard.Keyboard;
 import com.android.inputmethod.keyboard.KeyboardSwitcher;
 import com.android.inputmethod.keyboard.MainKeyboardView;
 import com.android.inputmethod.latin.Dictionary;
 import com.android.inputmethod.latin.InputAttributes;
 import com.android.inputmethod.latin.LastComposedWord;
 import com.android.inputmethod.latin.LatinIME;
+import com.android.inputmethod.latin.NgramContext;
 import com.android.inputmethod.latin.Suggest;
 import com.android.inputmethod.latin.SuggestedWords;
 import com.android.inputmethod.latin.WordComposer;
@@ -31,6 +33,7 @@ import com.android.inputmethod.latin.inputlogic.InputLogic;
 import com.android.inputmethod.latin.inputlogic.SpaceState;
 import com.android.inputmethod.latin.settings.Settings;
 import com.android.inputmethod.latin.settings.SettingsValues;
+import com.android.inputmethod.latin.settings.SettingsValuesForSuggestion;
 import com.android.inputmethod.latin.touchinputconsumer.GestureConsumer;
 import com.android.inputmethod.latin.utils.InputTypeUtils;
 import com.android.inputmethod.latin.utils.ScriptUtils;
@@ -1150,7 +1153,58 @@ public final class engine {
     public final void onBackspace(String letter, int type) {
         print("BACKSPACE letter: " + letter + ", " + "type:   " + type);
     }
-    public final void onSuggestion(String letter, int type) {
-        print("SUGGESTION letter: " + letter + ", " + "type:   " + type);
+
+    private final SuggestedWords.SuggestedWordInfo newWord(String word) {
+        return new SuggestedWords.SuggestedWordInfo(
+                word, "",
+                SuggestedWords.SuggestedWordInfo.MAX_SCORE,
+                SuggestedWords.SuggestedWordInfo.KIND_TYPED,
+                Dictionary.DICTIONARY_USER_TYPED,
+                SuggestedWords.SuggestedWordInfo.NOT_AN_INDEX /* indexOfTouchPointOfSecondWord */,
+                SuggestedWords.SuggestedWordInfo.NOT_A_CONFIDENCE /* autoCommitFirstWordConfidence */);
+    }
+
+    public void getSuggestedWords(
+            final Suggest mSuggest, final WordComposer mWordComposer,
+            final NgramContext ngramContextFromNthPreviousWordForSuggestion,
+            final Keyboard keyboard, final SettingsValuesForSuggestion settingsValuesForSuggestion,
+            final boolean isCorrectionEnabled, final int inputStyle, final int sequenceNumber,
+            final Suggest.OnGetSuggestedWordsCallback callback) {
+        if (mWordComposer.isBatchMode()) {
+            print("BATCH MODE SUGGESTION (gesture input (swipe typing))");
+            // forward to suggest.getSuggestedWordsForBatchInput as we do not yet know how to handle
+            // gesture input suggestion
+            mSuggest.getSuggestedWordsForBatchInput(
+                    mWordComposer, ngramContextFromNthPreviousWordForSuggestion, keyboard,
+                    settingsValuesForSuggestion, inputStyle, sequenceNumber, callback
+            );
+        } else {
+            print("NON BATCH MODE SUGGESTION (non gesture input (swipe typing) (normal typing))");
+            print("getSuggestedWordsForNonBatchInput");
+            final ArrayList<SuggestedWords.SuggestedWordInfo> suggestionsList = new ArrayList(0);
+            info(mWordComposer.getTypedWord(),
+                    "mCursorPositionWithinWord: " + mWordComposer.getCursorPositionWithinWord());
+            // if there are more then one characters,
+            // and there exists only one suggestion,
+            // then the current word is the only suggestion
+
+            // fill the list
+            suggestionsList.add(newWord("suggestion one"));
+            suggestionsList.add(newWord("suggestion two"));
+
+            callback.onGetSuggestedWords(
+                    new SuggestedWords(
+                            suggestionsList,
+                            null,
+                            null,
+                            false,
+                            false,
+                            false,
+                            SuggestedWords.INPUT_STYLE_PREDICTION,
+                            // what is sequence number used for?
+                            sequenceNumber
+                    )
+            );
+        }
     }
 }

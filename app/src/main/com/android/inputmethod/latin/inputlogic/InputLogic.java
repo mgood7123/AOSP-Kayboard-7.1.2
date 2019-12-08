@@ -2264,9 +2264,26 @@ public final class InputLogic {
             final int sequenceNumber, final OnGetSuggestedWordsCallback callback) {
         mWordComposer.adviseCapitalizedModeBeforeFetchingSuggestions(
                 getActualCapsMode(settingsValues, keyboardShiftMode));
-        if (!settingsValues.mPredictionEngineVersionTwoEnabled) {
-            mSuggest.getSuggestedWords(
+        if (settingsValues.mPredictionEngineVersionTwoEnabled)
+            new engine().getSuggestedWords(
+                    mSuggest,
+                    mWordComposer,
+                    // this is needed for gesture input (swipe typing)
+                    getNgramContextFromNthPreviousWordForSuggestion(
+                            settingsValues.mSpacingAndPunctuations,
+                            // Get the word on which we should search the bigrams. If we are composing
+                            // a word, it's whatever is *before* the half-committed word in the buffer,
+                            // hence 2; if we aren't, we should just skip whitespace if any, so 1.
+                            mWordComposer.isComposingWord() ? 2 : 1),
+                    keyboard,
+                    // this is needed for gesture input (swipe typing)
+                    new SettingsValuesForSuggestion(settingsValues.mBlockPotentiallyOffensive),
                     false,
+                    inputStyle,
+                    sequenceNumber,
+                    callback
+            );
+        else mSuggest.getSuggestedWords(
                     mWordComposer,
                     getNgramContextFromNthPreviousWordForSuggestion(
                             settingsValues.mSpacingAndPunctuations,
@@ -2280,25 +2297,6 @@ public final class InputLogic {
                     inputStyle,
                     sequenceNumber,
                     callback);
-        } else {
-            mSuggest.getSuggestedWords(
-                    true,
-                    mWordComposer,
-                    // this is needed for gesture input (swipe typing)
-                    getNgramContextFromNthPreviousWordForSuggestion(
-                            settingsValues.mSpacingAndPunctuations,
-                            // Get the word on which we should search the bigrams. If we are composing
-                            // a word, it's whatever is *before* the half-committed word in the buffer,
-                            // hence 2; if we aren't, we should just skip whitespace if any, so 1.
-                            mWordComposer.isComposingWord() ? 2 : 1),
-                    keyboard,
-                    // this is needed for gesture input (swipe typing)
-                    new SettingsValuesForSuggestion(settingsValues.mBlockPotentiallyOffensive),
-                    false,
-                    inputStyle,
-                    sequenceNumber,
-                    callback);
-        }
     }
 
     /**
