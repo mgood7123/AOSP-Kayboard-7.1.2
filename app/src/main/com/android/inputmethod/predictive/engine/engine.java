@@ -56,6 +56,9 @@ import static com.android.inputmethod.latin.common.Constants.ImeOption.NO_MICROP
 import static com.android.inputmethod.latin.common.Constants.ImeOption.NO_MICROPHONE_COMPAT;
 
 public final class engine {
+    
+    public static Tools tools = new Tools();
+    public static Tools.Database database = new Tools.Database();
 
     static boolean predictionAllowNonWords = true;
     static boolean allowAndroidTextViewEmulation = false;
@@ -71,7 +74,7 @@ public final class engine {
      *
      * @param keyCode the key code to send inside the key event.
      */
-    static public void sendDownUpKeyEvent(final InputLogic inputLogic, final int keyCode) {
+    static public final void sendDownUpKeyEvent(final InputLogic inputLogic, final int keyCode) {
         print("sendDownUpKeyEvent");
         final long eventTime = SystemClock.uptimeMillis();
         inputLogic.mConnection.sendKeyEvent(new KeyEvent(eventTime, eventTime,
@@ -92,7 +95,7 @@ public final class engine {
      * @param codePoint the code point to send.
      */
     // TODO: replace these two parameters with an InputTransaction
-    static public void sendKeyCodePoint(
+    static public final void sendKeyCodePoint(
             final InputLogic inputLogic, final SettingsValues settingsValues, final int codePoint
     ) {
         print(
@@ -123,7 +126,7 @@ public final class engine {
         }
     }
 
-    static public void handleNonSpecialCharacterEvent(
+    static public final void handleNonSpecialCharacterEvent(
             final InputLogic inputLogic, final SettingsValues settingsValues,
             @Nonnull final Event currentEvent, final InputTransaction inputTransaction,
             final LatinIME.UIHandler handler){
@@ -152,6 +155,7 @@ public final class engine {
             }
             // isComposingWord() may have changed since we stored wasComposing
             if (inputLogic.mWordComposer.isComposingWord())
+                // TODO: onCommitSpace
                 onCommitNormal(
                         inputLogic, inputTransaction, shouldAvoidSendingCode,
                         mAutoCorrectionEnabledPerUserSettings,
@@ -353,7 +357,7 @@ public final class engine {
         }
     }
 
-    static public void onCommitKeyCodePoint(
+    static public final void onCommitKeyCodePoint(
             final InputLogic inputLogic, final SettingsValues settingsValues, final int codePoint
     ) {
         onCommit(
@@ -365,7 +369,7 @@ public final class engine {
         );
     }
 
-    static public void onCommitCompletion(
+    static public final void onCommitCompletion(
             final LatinIME latinIME, final CompletionInfo mApplicationSpecifiedCompletionInfo
     ) {
         onCommit(
@@ -377,7 +381,7 @@ public final class engine {
         );
     }
 
-    static public void onCommitConnection(
+    static public final void onCommitConnection(
             final InputLogic inputLogic, final InputTransaction inputTransaction,
             final SettingsValues settingsValues, final String whatToCommit
     ) {
@@ -390,7 +394,7 @@ public final class engine {
         );
     }
 
-    static public void onCommitNormal(
+    static public final void onCommitNormal(
             final InputLogic inputLogic, final InputTransaction inputTransaction,
             final boolean shouldAutoCorrect, final boolean shouldAvoidSendingCode,
             final String whatToCommit, final SettingsValues settingsValues,
@@ -405,7 +409,7 @@ public final class engine {
         );
     }
 
-    static public void onCommitSuggestion(
+    static public final void onCommitSuggestion(
             final LatinIME latinIME, final SettingsValues settingsValues, final String suggestion,
             final int commitTypeManualPick, final String separatorString) {
         onCommit(
@@ -417,7 +421,7 @@ public final class engine {
         );
     }
 
-    static public void onCommitSuggestion(
+    static public final void onCommitSuggestion(
             final InputLogic inputLogic, final SettingsValues settingsValues,
             final String suggestion, final int commitTypeManualPick, final String separatorString) {
         onCommit(
@@ -429,7 +433,7 @@ public final class engine {
         );
     }
 
-    static public void onCommit(
+    static public final void onCommit(
             final LatinIME latinIME, final CompletionInfo mApplicationSpecifiedCompletionInfo,
             final InputLogic inputLogic, final InputTransaction inputTransaction,
             final boolean shouldAutoCorrect, final boolean shouldAvoidSendingCode,
@@ -449,12 +453,15 @@ public final class engine {
             if (isCompletion) {
                 // TODO: can this be merged?
                 print("commit is a suggestion from completion");
+                // TODO: ADD TO SUGGESTION LIST
+                tools.analyze(whatToCommit, database);
                 inputLogic.commitChosenWord(
                         settingsValues, whatToCommit, commitTypeManualPick, separatorString
                 );
             } else {
                 print("commit is a suggestion");
                 // TODO: ADD TO SUGGESTION LIST
+                tools.analyze(whatToCommit, database);
                 latinIME.mInputLogic.commitChosenWord(
                         settingsValues, whatToCommit, commitTypeManualPick, separatorString
                 );
@@ -517,12 +524,14 @@ public final class engine {
         } else {
             if (useConnection) {
                 print("commit is from a consumed event");
+                // TODO: should we suggest here? ABD > AB A
                 inputLogic.mConnection.commitText(whatToCommit, 1);
                 inputTransaction.setDidAffectContents();
             } else {
                 print("commit is normal");
                 print("is space or new line, commit typed");
                 // TODO: ADD TO SUGGESTION LIST
+                tools.analyze(inputLogic.mWordComposer.getTypedWord(), database);
                 inputLogic.commitTyped(settingsValues, whatToCommit);
             }
         }
@@ -533,7 +542,7 @@ public final class engine {
      * @param currentEvent The event to handle.
      * @param inputTransaction The transaction in progress.
      */
-    static public void handleBackspaceEvent(
+    static public final void handleBackspaceEvent(
             final InputLogic inputLogic, final SettingsValues settingsValues,
             @Nonnull final Event currentEvent, final InputTransaction inputTransaction,
             final int currentKeyboardScriptId
@@ -740,7 +749,7 @@ public final class engine {
         }
     }
 
-    static public void process(
+    static public final void process(
             final LatinIME latinIME, final boolean isHardwareKey,
             final InputLogic inputLogic, final SettingsValues settingsValues,
             @Nonnull final Event unprocessedEvent, final int keyboardShiftMode, final int spaceState,
@@ -940,7 +949,7 @@ public final class engine {
         }
     }
 
-    static public void processUI(LatinIME latinIME, EditorInfo editorInfo, boolean restarting) {
+    static public final void processUI(LatinIME latinIME, EditorInfo editorInfo, boolean restarting) {
         latinIME.mDictionaryFacilitator.onStartInput();
         // Switch to the null consumer to handle cases leading to early exit below, for which we
         // also wouldn't be consuming gesture data.
@@ -1224,7 +1233,7 @@ public final class engine {
      *   to a cursor move, for example). In ICS, there is a platform bug that we need to work
      *   around only when we come here at input start time.
      */
-    static public void restartSuggestionsOnWordTouchedByCursor(
+    static public final void restartSuggestionsOnWordTouchedByCursor(
             final InputLogic inputLogic, final SettingsValues settingsValues,
             final boolean forStartInput, final int currentKeyboardScriptId) {
         // TODO: should we handle spelling correction suggestions?
@@ -1406,7 +1415,7 @@ public final class engine {
     }
 
 
-    static public void handleMessage(LatinIME.UIHandler uiHandler, LatinIME latinIME, Message msg) {
+    static public final void handleMessage(LatinIME.UIHandler uiHandler, LatinIME latinIME, Message msg) {
         final KeyboardSwitcher switcher = latinIME.mKeyboardSwitcher;
         switch (msg.what) {
             case LatinIME.UIHandler.MSG_UPDATE_SUGGESTION_STRIP:
@@ -1501,7 +1510,7 @@ public final class engine {
      */
     // Called from {@link SuggestionStripView} through the {@link SuggestionStripView#Listener}
     // interface
-    static public void onPickSuggestionManually(final LatinIME latinIME, final SettingsValues settingsValues,
+    static public final void onPickSuggestionManually(final LatinIME latinIME, final SettingsValues settingsValues,
                                          final SuggestedWords.SuggestedWordInfo suggestionInfo, final int keyboardShiftState,
                                          final int currentKeyboardScriptId, final LatinIME.UIHandler handler) {
         final SuggestedWords suggestedWords = latinIME.mInputLogic.mSuggestedWords;
@@ -1615,7 +1624,7 @@ public final class engine {
                 SuggestedWords.SuggestedWordInfo.NOT_A_CONFIDENCE /* autoCommitFirstWordConfidence */);
     }
 
-    static public void getSuggestedWords(
+    static public final void getSuggestedWords(
             final Suggest mSuggest, final WordComposer mWordComposer,
             final NgramContext ngramContextFromNthPreviousWordForSuggestion,
             final Keyboard keyboard, final SettingsValuesForSuggestion settingsValuesForSuggestion,
@@ -1638,10 +1647,16 @@ public final class engine {
             // if there are more then one characters,
             // and there exists only one suggestion,
             // then the current word is the only suggestion
-
-            // fill the list
-            suggestionsList.add(newWord("suggestion one"));
-            suggestionsList.add(newWord("suggestion two"));
+            tools.debug = true;
+            if (
+                    mWordComposer.getTypedWord().equals(" ") ||
+                    mWordComposer.getTypedWord().equals("\n") ||
+                    mWordComposer.getTypedWord().equals("")
+            ) tools.predictNextWord(database);
+            else tools.predictNextWord(mWordComposer.getTypedWord(), database);
+            tools.printPredictions(database);
+            for (int i = 0; i != database.predictions.size(); i++)
+                suggestionsList.add(newWord(database.predictions.get(i).next_word));
 
             callback.onGetSuggestedWords(
                     new SuggestedWords(

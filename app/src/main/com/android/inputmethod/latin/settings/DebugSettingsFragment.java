@@ -32,6 +32,7 @@ import com.android.inputmethod.latin.DictionaryDumpBroadcastReceiver;
 import com.android.inputmethod.latin.DictionaryFacilitatorImpl;
 import com.android.inputmethod.latin.utils.ApplicationUtils;
 import com.android.inputmethod.latin.utils.ResourceUtils;
+import com.android.inputmethod.predictive.engine.engine;
 
 import java.util.Locale;
 
@@ -64,6 +65,9 @@ public final class DebugSettingsFragment extends SubScreenFragment
             pref.setOnPreferenceClickListener(this);
             dictDumpPreferenceGroup.addPreference(pref);
         }
+        final Preference pref = new DictDumpPreference(getActivity(), "Predictive Engine v2");
+        pref.setOnPreferenceClickListener(this);
+        dictDumpPreferenceGroup.addPreference(pref);
         final Resources res = getResources();
         setupKeyPreviewAnimationDuration(DebugSettings.PREF_KEY_PREVIEW_SHOW_UP_DURATION,
                 res.getInteger(R.integer.config_key_preview_show_up_duration));
@@ -95,7 +99,8 @@ public final class DebugSettingsFragment extends SubScreenFragment
         public DictDumpPreference(final Context context, final String dictName) {
             super(context);
             setKey(PREF_KEY_DUMP_DICT_PREFIX + dictName);
-            setTitle("Dump " + dictName + " dictionary");
+            if (dictName.equals("Predictive Engine v2")) setTitle("Clear " + dictName + " prediction data");
+            else setTitle("Dump " + dictName + " dictionary");
             mDictName = dictName;
         }
     }
@@ -106,6 +111,10 @@ public final class DebugSettingsFragment extends SubScreenFragment
         if (pref instanceof DictDumpPreference) {
             final DictDumpPreference dictDumpPref = (DictDumpPreference)pref;
             final String dictName = dictDumpPref.mDictName;
+            if (dictDumpPref.mDictName.equals("Predictive Engine v2")) {
+                engine.database.reset();
+                return true;
+            }
             final Intent intent = new Intent(
                     DictionaryDumpBroadcastReceiver.DICTIONARY_DUMP_INTENT_ACTION);
             intent.putExtra(DictionaryDumpBroadcastReceiver.DICTIONARY_NAME_KEY, dictName);
