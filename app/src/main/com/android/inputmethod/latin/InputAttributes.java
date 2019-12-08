@@ -36,23 +36,24 @@ import static com.android.inputmethod.latin.common.Constants.ImeOption.NO_MICROP
 public final class InputAttributes {
     private final String TAG = InputAttributes.class.getSimpleName();
 
-    final public String mTargetApplicationPackageName;
-    final public boolean mInputTypeNoAutoCorrect;
-    final public boolean mIsPasswordField;
-    final public boolean mShouldShowSuggestions;
-    final public boolean mApplicationSpecifiedCompletionOn;
-    final public boolean mShouldInsertSpacesAutomatically;
-    final public boolean mShouldShowVoiceInputKey;
+    public String mTargetApplicationPackageName;
+    public boolean mInputTypeNoAutoCorrect;
+    public boolean mIsPasswordField;
+    public boolean mShouldShowSuggestions;
+    public boolean mApplicationSpecifiedCompletionOn;
+    public boolean mShouldInsertSpacesAutomatically;
+    public boolean mShouldShowVoiceInputKey;
     /**
      * Whether the floating gesture preview should be disabled. If true, this should override the
      * corresponding keyboard settings preference, always suppressing the floating preview text.
      * {@link com.android.inputmethod.latin.settings.SettingsValues#mGestureFloatingPreviewTextEnabled}
      */
-    final public boolean mDisableGestureFloatingPreviewText;
-    final public boolean mIsGeneralTextInput;
-    final private int mInputType;
-    final private EditorInfo mEditorInfo;
-    final private String mPackageNameForPrivateImeOptions;
+    public boolean mDisableGestureFloatingPreviewText;
+    public boolean mIsGeneralTextInput;
+    public int mInputType;
+    public EditorInfo mEditorInfo;
+    public String mPackageNameForPrivateImeOptions;
+    public boolean AndroidTextViewEmulation = false;
 
     public InputAttributes(final EditorInfo editorInfo, final boolean isFullscreenMode,
             final String packageNameForPrivateImeOptions) {
@@ -141,6 +142,8 @@ public final class InputAttributes {
                 && InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD != variation;
     }
 
+    public InputAttributes() {}
+
     public boolean isTypeNull() {
         return InputType.TYPE_NULL == mInputType;
     }
@@ -149,7 +152,7 @@ public final class InputAttributes {
         return editorInfo.inputType == mInputType;
     }
 
-    private boolean hasNoMicrophoneKeyOption() {
+    public boolean hasNoMicrophoneKeyOption() {
         @SuppressWarnings("deprecation")
         final boolean deprecatedNoMicrophone = InputAttributes.inPrivateImeOptions(
                 null, NO_MICROPHONE_COMPAT, mEditorInfo);

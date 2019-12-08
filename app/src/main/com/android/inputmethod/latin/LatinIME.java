@@ -152,7 +152,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     public final KeyboardSwitcher mKeyboardSwitcher;
     public final SubtypeState mSubtypeState = new SubtypeState();
     private EmojiAltPhysicalKeyDetector mEmojiAltPhysicalKeyDetector;
-    private StatsUtilsManager mStatsUtilsManager;
+    public StatsUtilsManager mStatsUtilsManager;
     // Working variable for {@link #startShowingInputView()} and
     // {@link #onEvaluateInputViewShown()}.
     private boolean mIsExecutingStartShowingInputView;
@@ -651,7 +651,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         mStatsUtilsManager.onLoadSettings(this /* context */, currentSettingsValues);
     }
 
-    private void refreshPersonalizationDictionarySession(
+    public void refreshPersonalizationDictionarySession(
             final SettingsValues currentSettingsValues) {
         if (!currentSettingsValues.mUsePersonalizedDicts) {
             // Remove user history dictionaries.
@@ -700,7 +700,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
      * @param locale the locale
      */
     // TODO: make sure the current settings always have the right locales, and read from them.
-    private void resetDictionaryFacilitator(final Locale locale) {
+    public void resetDictionaryFacilitator(final Locale locale) {
         final SettingsValues settingsValues = mSettings.getCurrent();
         mDictionaryFacilitator.resetDictionaries(this /* context */, locale,
                 settingsValues.mUseContactsDict, settingsValues.mUsePersonalizedDicts,

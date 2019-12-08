@@ -7,6 +7,7 @@ import android.text.InputType;
 import android.text.TextUtils;
 import android.text.style.SuggestionSpan;
 import android.util.Log;
+import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.inputmethod.CompletionInfo;
 import android.view.inputmethod.CorrectionInfo;
@@ -20,6 +21,7 @@ import com.android.inputmethod.event.InputTransaction;
 import com.android.inputmethod.keyboard.Keyboard;
 import com.android.inputmethod.keyboard.KeyboardSwitcher;
 import com.android.inputmethod.keyboard.MainKeyboardView;
+import com.android.inputmethod.latin.AudioAndHapticFeedbackManager;
 import com.android.inputmethod.latin.Dictionary;
 import com.android.inputmethod.latin.InputAttributes;
 import com.android.inputmethod.latin.LastComposedWord;
@@ -44,23 +46,87 @@ import com.android.inputmethod.latin.utils.StatsUtils;
 import com.android.inputmethod.latin.utils.TextRange;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import javax.annotation.Nonnull;
 
 import static com.android.inputmethod.latin.common.Constants.ImeOption.FORCE_ASCII;
+import static com.android.inputmethod.latin.common.Constants.ImeOption.NO_FLOATING_GESTURE_PREVIEW;
 import static com.android.inputmethod.latin.common.Constants.ImeOption.NO_MICROPHONE;
 import static com.android.inputmethod.latin.common.Constants.ImeOption.NO_MICROPHONE_COMPAT;
 
 public final class engine {
 
-    boolean predictionAllowNonWords = true;
-
+    static boolean predictionAllowNonWords = true;
+    static boolean allowAndroidTextViewEmulation = false;
     // suggestion strip updates are triggered by updateStateAfterInputTransaction
+
+    /**
+     * Sends a DOWN key event followed by an UP key event to the editor.
+     *
+     * If possible at all, avoid using this method. It causes all sorts of race conditions with
+     * the text view because it goes through a different, asynchronous binder. Also, batch edits
+     * are ignored for key events. Use the normal software input methods instead.
+     *
+     * @param keyCode the key code to send inside the key event.
+     */
+    public void sendDownUpKeyEvent(final InputLogic inputLogic, final int keyCode) {
+        print("sendDownUpKeyEvent");
+        final long eventTime = SystemClock.uptimeMillis();
+        inputLogic.mConnection.sendKeyEvent(new KeyEvent(eventTime, eventTime,
+                KeyEvent.ACTION_DOWN, keyCode, 0, 0, KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
+                KeyEvent.FLAG_SOFT_KEYBOARD | KeyEvent.FLAG_KEEP_TOUCH_MODE));
+        inputLogic.mConnection.sendKeyEvent(new KeyEvent(SystemClock.uptimeMillis(), eventTime,
+                KeyEvent.ACTION_UP, keyCode, 0, 0, KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
+                KeyEvent.FLAG_SOFT_KEYBOARD | KeyEvent.FLAG_KEEP_TOUCH_MODE));
+    }
+
+    /**
+     * Sends a code point to the editor, using the most appropriate method.
+     *
+     * Normally we send code points with commitText, but there are some cases (where backward
+     * compatibility is a concern for example) where we want to use deprecated methods.
+     *
+     * @param settingsValues the current values of the settings.
+     * @param codePoint the code point to send.
+     */
+    // TODO: replace these two parameters with an InputTransaction
+    public void sendKeyCodePoint(
+            final InputLogic inputLogic, final SettingsValues settingsValues, final int codePoint
+    ) {
+        print(
+                "sendKeyCodePoint: " + codePoint +
+                " (as string: " + StringUtils.newSingleCodePointString(codePoint) + ")"
+        );
+        // TODO: Remove this special handling of digit letters.
+        // For backward compatibility. See {@link InputMethodService#sendKeyChar(char)}.
+        if (codePoint >= '0' && codePoint <= '9') {
+            sendDownUpKeyEvent(inputLogic, codePoint - '0' + KeyEvent.KEYCODE_0);
+            return;
+        }
+
+        // TODO: we should do this also when the editor has TYPE_NULL
+        if (
+                Constants.CODE_ENTER == codePoint && (
+                        settingsValues.isBeforeJellyBean() ||
+                        (inputLogic.getCurrentInputEditorInfo().inputType == InputType.TYPE_NULL)
+                )
+        ) {
+            // Backward compatibility mode. Before Jelly bean, the keyboard would simulate
+            // a hardware keyboard event on pressing enter or delete. This is bad for many
+            // reasons (there are race conditions with commits) but some applications are
+            // relying on this behavior so we continue to support it for older apps.
+            sendDownUpKeyEvent(inputLogic, KeyEvent.KEYCODE_ENTER);
+        } else {
+            inputLogic.mConnection.commitText(StringUtils.newSingleCodePointString(codePoint), 1);
+        }
+    }
 
     public void handleNonSpecialCharacterEvent(
             final InputLogic inputLogic, final SettingsValues settingsValues,
             @Nonnull final Event currentEvent, final InputTransaction inputTransaction,
             final LatinIME.UIHandler handler){
+        print("handleNonSpecialCharacterEvent");
         final int codePoint = currentEvent.mCodePoint;
         inputLogic.mSpaceState = SpaceState.NONE;
         if (
@@ -135,7 +201,7 @@ public final class engine {
                 }
 
                 if (!shouldAvoidSendingCode) {
-                    inputLogic.sendKeyCodePoint(settingsValues, codePoint);
+                    onCommitKeyCodePoint(inputLogic, settingsValues, codePoint);
                 }
             } else {
                 if ((SpaceState.PHANTOM == inputTransaction.mSpaceState
@@ -156,7 +222,7 @@ public final class engine {
                     inputLogic.mSpaceState = SpaceState.PHANTOM;
                 }
 
-                inputLogic.sendKeyCodePoint(settingsValues, codePoint);
+                onCommitKeyCodePoint(inputLogic, settingsValues, codePoint);
 
                 // Set punctuation right away. onUpdateSelection will fire but tests whether it is
                 // already displayed or not, so it's okay.
@@ -177,10 +243,11 @@ public final class engine {
                             inputLogic.mConnection.getExpectedSelectionEnd(), true /* clearSuggestionStrip */);
                 } else {
                     print("is NOT space or new line, commit typed");
-                    onCommitConnection(
+                    onCommitNormal(
                             inputLogic, inputTransaction,
-                            LastComposedWord.NOT_A_SEPARATOR,
-                            inputTransaction.mSettingsValues
+                            false, false,
+                            null, inputTransaction.mSettingsValues,
+                            handler
                     );
                 }
             }
@@ -278,11 +345,23 @@ public final class engine {
                 if (swapWeakSpace && inputLogic.trySwapSwapperAndSpace(currentEvent, inputTransaction)) {
                     inputLogic.mSpaceState = SpaceState.WEAK;
                 } else {
-                    inputLogic.sendKeyCodePoint(settingsValues, codePoint2);
+                    onCommitKeyCodePoint(inputLogic, settingsValues, codePoint2);
                 }
             }
             inputTransaction.setRequiresUpdateSuggestions();
         }
+    }
+
+    private void onCommitKeyCodePoint(
+            final InputLogic inputLogic, final SettingsValues settingsValues, final int codePoint
+    ) {
+        onCommit(
+                null, null, inputLogic,
+                null, false, false,
+                null, null, 0, settingsValues, null,
+                false, false, false,
+                true, codePoint
+        );
     }
 
     private void onCommitCompletion(
@@ -292,19 +371,21 @@ public final class engine {
                 latinIME, mApplicationSpecifiedCompletionInfo, null,
                 null, false, false,
                 null, null, 0,null,
-                null, false, true, false
+                null, false, true, false,
+                false, 0
         );
     }
 
     private void onCommitConnection(
             final InputLogic inputLogic, final InputTransaction inputTransaction,
-            final String whatToCommit, SettingsValues settingsValues
+            final SettingsValues settingsValues, final String whatToCommit
     ) {
         onCommit(
                 null, null, inputLogic,
                 inputTransaction, false, false,
                 whatToCommit, null, 0, settingsValues, null,
-                true, false, false
+                true, false, false,
+                false, 0
         );
     }
 
@@ -318,7 +399,8 @@ public final class engine {
                 null, null, inputLogic, inputTransaction,
                 shouldAvoidSendingCode, settingsValues.mAutoCorrectionEnabledPerUserSettings,
                 whatToCommit, null, 0, settingsValues,
-                handler, false, false, false
+                handler, false, false, false,
+                false, 0
         );
     }
 
@@ -329,7 +411,8 @@ public final class engine {
                 latinIME, null, null, null,
                 false, false, suggestion, separatorString,
                 commitTypeManualPick, settingsValues, null,
-                false, false, true
+                false, false, true,
+                false, 0
         );
     }
 
@@ -340,7 +423,8 @@ public final class engine {
                 null, null, inputLogic, null,
                 false, false, suggestion, separatorString,
                 commitTypeManualPick, settingsValues, null,
-                false, true, true
+                false, true, true,
+                false, 0
         );
     }
 
@@ -351,11 +435,16 @@ public final class engine {
             final String whatToCommit, final String separatorString,
             final int commitTypeManualPick, final SettingsValues settingsValues,
             final LatinIME.UIHandler handler, final boolean useConnection,
-            final boolean isCompletion, final boolean isSuggestion
+            final boolean isCompletion, final boolean isSuggestion,
+            final boolean sendKeyCodePoint, final int codePoint
     ) {
         // TODO: handle adding a new suggestion on each word commit
         print("onCommit");
-        if (isSuggestion) {
+        if (sendKeyCodePoint) {
+            print("commit is a Key Code Point (non text view origin)");
+            // TODO: refactor this to send a string
+            sendKeyCodePoint(inputLogic, settingsValues, codePoint);
+        } else if (isSuggestion) {
             if (isCompletion) {
                 print("commit is a suggestion from completion");
                 inputLogic.commitChosenWord(
@@ -676,7 +765,7 @@ public final class engine {
                 final CharSequence textToCommit = currentEvent.getTextToCommit();
                 if (!TextUtils.isEmpty(textToCommit)) {
                     onCommitConnection(
-                            inputLogic, inputTransaction, textToCommit.toString(), settingsValues
+                            inputLogic, inputTransaction, settingsValues, textToCommit.toString()
                     );
                 }
                 if (inputLogic.mWordComposer.isComposingWord()) {
@@ -957,7 +1046,114 @@ public final class engine {
 
         if (isDifferentTextField ||
                 !currentSettingsValues.hasSameOrientation(latinIME.getResources().getConfiguration())) {
-            latinIME.loadSettings();
+            final Locale locale = latinIME.mRichImm.getCurrentSubtypeLocale();
+            final InputAttributes inputAttributes = new InputAttributes();
+            // manual initialization
+            // TODO: mmigrate this to global InitAttributes class
+            inputAttributes.mEditorInfo = editorInfo;
+            inputAttributes.mPackageNameForPrivateImeOptions = latinIME.getPackageName();
+            inputAttributes.mTargetApplicationPackageName = null != editorInfo ? editorInfo.packageName : null;
+            final int inputType = null != editorInfo ? editorInfo.inputType : 0;
+            final int inputClass = inputType & InputType.TYPE_MASK_CLASS;
+            inputAttributes.mInputType = inputType;
+            inputAttributes.mIsPasswordField = InputTypeUtils.isPasswordInputType(inputType)
+                    || InputTypeUtils.isVisiblePasswordInputType(inputType);
+            inputAttributes.AndroidTextViewEmulation = false;
+            boolean continueInitialization = false;
+            if (inputClass != InputType.TYPE_CLASS_TEXT) {
+                // If we are not looking at a TYPE_CLASS_TEXT field, the following strange
+                // cases may arise, so we do a couple sanity checks for them. If it's a
+                // TYPE_CLASS_TEXT field, these special cases cannot happen, by construction
+                // of the flags.
+                if (null == editorInfo) {
+                    Log.w(TAG, "No editor info for this field. Bug?");
+                } else if (InputType.TYPE_NULL == inputType) {
+                    // TODO: We should honor TYPE_NULL specification.
+                    Log.i(TAG, "InputType.TYPE_NULL is specified");
+                    inputAttributes.AndroidTextViewEmulation = allowAndroidTextViewEmulation;
+                } else if (inputClass == 0) {
+                    // TODO: is this check still necessary?
+                    Log.w(TAG, String.format("Unexpected input class: inputType=0x%08x"
+                            + " imeOptions=0x%08x", inputType, editorInfo.imeOptions));
+                }
+                if (inputAttributes.AndroidTextViewEmulation)
+                    continueInitialization = true;
+                else {
+                    inputAttributes.mShouldShowSuggestions = false;
+                    inputAttributes.mInputTypeNoAutoCorrect = false;
+                    inputAttributes.mApplicationSpecifiedCompletionOn = false;
+                    inputAttributes.mShouldInsertSpacesAutomatically = false;
+                    inputAttributes.mShouldShowVoiceInputKey = false;
+                    inputAttributes.mDisableGestureFloatingPreviewText = false;
+                    inputAttributes.mIsGeneralTextInput = false;
+                }
+            }
+            if (inputClass == InputType.TYPE_CLASS_TEXT || continueInitialization) {
+                // inputClass == InputType.TYPE_CLASS_TEXT
+                final int variation = inputType & InputType.TYPE_MASK_VARIATION;
+                final boolean flagNoSuggestions =
+                        0 != (inputType & InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+                final boolean flagMultiLine =
+                        0 != (inputType & InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+                final boolean flagAutoCorrect =
+                        0 != (inputType & InputType.TYPE_TEXT_FLAG_AUTO_CORRECT);
+                final boolean flagAutoComplete =
+                        0 != (inputType & InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE);
+
+                // TODO: Have a helper method in InputTypeUtils
+
+                // Make sure that passwords are not displayed in {@link SuggestionStripView}.
+                final boolean shouldSuppressSuggestions = inputAttributes.mIsPasswordField
+                        || InputTypeUtils.isEmailVariation(variation)
+                        || InputType.TYPE_TEXT_VARIATION_URI == variation
+                        || InputType.TYPE_TEXT_VARIATION_FILTER == variation
+                        || flagNoSuggestions
+                        || flagAutoComplete;
+                inputAttributes.mShouldShowSuggestions = !shouldSuppressSuggestions;
+
+                inputAttributes.mShouldInsertSpacesAutomatically = InputTypeUtils.isAutoSpaceFriendlyType(inputType);
+
+                final boolean noMicrophone = inputAttributes.mIsPasswordField
+                        || InputTypeUtils.isEmailVariation(variation)
+                        || InputType.TYPE_TEXT_VARIATION_URI == variation
+                        || inputAttributes.hasNoMicrophoneKeyOption();
+                inputAttributes.mShouldShowVoiceInputKey = !noMicrophone;
+
+                inputAttributes.mDisableGestureFloatingPreviewText = InputAttributes.inPrivateImeOptions(
+                        inputAttributes.mPackageNameForPrivateImeOptions, NO_FLOATING_GESTURE_PREVIEW, editorInfo);
+
+                // If it's a browser edit field and auto correct is not ON explicitly, then
+                // disable auto correction, but keep suggestions on.
+                // If NO_SUGGESTIONS is set, don't do prediction.
+                // If it's not multiline and the autoCorrect flag is not set, then don't correct
+                inputAttributes.mInputTypeNoAutoCorrect =
+                        (variation == InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT && !flagAutoCorrect)
+                                || flagNoSuggestions
+                                || (!flagAutoCorrect && !flagMultiLine);
+
+                inputAttributes.mApplicationSpecifiedCompletionOn = flagAutoComplete && latinIME.isFullscreenMode();
+
+                // If we come here, inputClass is always TYPE_CLASS_TEXT
+                inputAttributes.mIsGeneralTextInput = InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS != variation
+                        && InputType.TYPE_TEXT_VARIATION_PASSWORD != variation
+                        && InputType.TYPE_TEXT_VARIATION_PHONETIC != variation
+                        && InputType.TYPE_TEXT_VARIATION_URI != variation
+                        && InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD != variation
+                        && InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS != variation
+                        && InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD != variation;
+            }
+            // end of manual initialization
+            latinIME.mSettings.loadSettings(latinIME, locale, inputAttributes);
+            AudioAndHapticFeedbackManager.getInstance().onSettingsChanged(currentSettingsValues);
+            // This method is called on startup and language switch, before the new layout has
+            // been displayed. Opening dictionaries never affects responsivity as dictionaries are
+            // asynchronously loaded.
+            if (!latinIME.mHandler.hasPendingReopenDictionaries()) {
+                latinIME.resetDictionaryFacilitator(locale);
+            }
+            latinIME.refreshPersonalizationDictionarySession(currentSettingsValues);
+            latinIME.resetDictionaryFacilitatorIfNecessary();
+            latinIME.mStatsUtilsManager.onLoadSettings(latinIME /* context */, currentSettingsValues);
         }
         if (isDifferentTextField) {
             mainKeyboardView.closing();
@@ -1044,7 +1240,7 @@ public final class engine {
         }
         final int expectedCursorPosition = inputLogic.mConnection.getExpectedSelectionStart();
 
-        // if true, suggestions obey word
+        // if true, suggestions obey isCursorTouchingWord
         if (false)
             if (!inputLogic.mConnection.isCursorTouchingWord(settingsValues.mSpacingAndPunctuations,
                 true /* checkTextAfter */)) {
