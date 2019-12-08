@@ -221,7 +221,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
             }
             final KeyboardSwitcher switcher = latinIme.mKeyboardSwitcher;
             if (latinIme.mSettings.getCurrent().mPredictionEngineVersionTwoEnabled) {
-                new engine().handleMessage(this, latinIme, msg);
+                engine.handleMessage(this, latinIme, msg);
             } else {
                 switch (msg.what) {
                     case MSG_UPDATE_SUGGESTION_STRIP:
@@ -231,7 +231,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                         break;
                     case MSG_UPDATE_SHIFT_STATE:
                         if (latinIme.mSettings.getCurrent().mPredictionEngineVersionTwoEnabled) {
-                            new engine().handleMessage(this, latinIme, msg);
+                            engine.handleMessage(this, latinIme, msg);
                         } else {
                             switcher.requestUpdatingShiftState(latinIme.getCurrentAutoCapsState(),
                                     latinIme.getCurrentRecapitalizeState());
@@ -248,7 +248,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                         break;
                     case MSG_RESUME_SUGGESTIONS:
                         if (latinIme.mSettings.getCurrent().mPredictionEngineVersionTwoEnabled) {
-                            new engine().handleMessage(this, latinIme, msg);
+                            engine.handleMessage(this, latinIme, msg);
                         } else {
                             latinIme.mInputLogic.restartSuggestionsOnWordTouchedByCursor(
                                     latinIme.mSettings.getCurrent(), false /* forStartInput */,
@@ -257,7 +257,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                         break;
                     case MSG_RESUME_SUGGESTIONS_FOR_START_INPUT:
                         if (latinIme.mSettings.getCurrent().mPredictionEngineVersionTwoEnabled) {
-                            new engine().handleMessage(this, latinIme, msg);
+                            engine.handleMessage(this, latinIme, msg);
                         } else {
                             latinIme.mInputLogic.restartSuggestionsOnWordTouchedByCursor(
                                     latinIme.mSettings.getCurrent(), true /* forStartInput */,
@@ -272,7 +272,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                         break;
                     case MSG_UPDATE_TAIL_BATCH_INPUT_COMPLETED:
                         if (latinIme.mSettings.getCurrent().mPredictionEngineVersionTwoEnabled) {
-                            new engine().handleMessage(this, latinIme, msg);
+                            engine.handleMessage(this, latinIme, msg);
                         } else {
                             final SuggestedWords suggestedWords = (SuggestedWords) msg.obj;
                             latinIme.mInputLogic.onUpdateTailBatchInputCompleted(
@@ -283,7 +283,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                         break;
                     case MSG_RESET_CACHES:
                         if (latinIme.mSettings.getCurrent().mPredictionEngineVersionTwoEnabled) {
-                            new engine().handleMessage(this, latinIme, msg);
+                            engine.handleMessage(this, latinIme, msg);
                         } else {
                             final SettingsValues settingsValues = latinIme.mSettings.getCurrent();
                             if (latinIme.mInputLogic.retryResetCachesAndReturnSuccess(
@@ -305,7 +305,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                         break;
                     case MSG_SWITCH_LANGUAGE_AUTOMATICALLY:
                         if (latinIme.mSettings.getCurrent().mPredictionEngineVersionTwoEnabled) {
-                            new engine().handleMessage(this, latinIme, msg);
+                            engine.handleMessage(this, latinIme, msg);
                         } else {
                             latinIme.switchLanguage((InputMethodSubtype) msg.obj);
                         }
@@ -858,7 +858,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     void onStartInputViewInternal(final EditorInfo editorInfo, final boolean restarting) {
         super.onStartInputView(editorInfo, restarting);
         if (mSettings.getCurrent().mPredictionEngineVersionTwoEnabled) {
-            new engine().processUI(this, editorInfo, restarting);
+            engine.processUI(this, editorInfo, restarting);
         } else {
             mDictionaryFacilitator.onStartInput();
             // Switch to the null consumer to handle cases leading to early exit below, for which we
@@ -1596,7 +1596,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     @Override
     public void pickSuggestionManually(final SuggestedWordInfo suggestionInfo) {
         if (mSettings.getCurrent().mPredictionEngineVersionTwoEnabled)
-            new engine().onPickSuggestionManually(this,
+            engine.onPickSuggestionManually(this,
                     mSettings.getCurrent(), suggestionInfo,
                     mKeyboardSwitcher.getKeyboardShiftMode(),
                     mKeyboardSwitcher.getCurrentKeyboardScriptId(),

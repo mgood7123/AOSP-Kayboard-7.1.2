@@ -443,7 +443,7 @@ public final class InputLogic {
                                         @Nonnull final Event event, final int keyboardShiftMode,
                                         final int currentKeyboardScriptId, final LatinIME.UIHandler handler) {
         if (settingsValues.mPredictionEngineVersionTwoEnabled) {
-            new engine().process(
+            engine.process(
                     latinIME,
                     isHardwareKey,
                     this,
@@ -2265,7 +2265,7 @@ public final class InputLogic {
         mWordComposer.adviseCapitalizedModeBeforeFetchingSuggestions(
                 getActualCapsMode(settingsValues, keyboardShiftMode));
         if (settingsValues.mPredictionEngineVersionTwoEnabled)
-            new engine().getSuggestedWords(
+            engine.getSuggestedWords(
                     mSuggest,
                     mWordComposer,
                     // this is needed for gesture input (swipe typing)

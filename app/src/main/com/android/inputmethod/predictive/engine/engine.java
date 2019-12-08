@@ -59,6 +59,7 @@ public final class engine {
 
     static boolean predictionAllowNonWords = true;
     static boolean allowAndroidTextViewEmulation = false;
+    static boolean mAutoCorrectionEnabledPerUserSettings = false;
     // suggestion strip updates are triggered by updateStateAfterInputTransaction
 
     /**
@@ -70,7 +71,7 @@ public final class engine {
      *
      * @param keyCode the key code to send inside the key event.
      */
-    public void sendDownUpKeyEvent(final InputLogic inputLogic, final int keyCode) {
+    static public void sendDownUpKeyEvent(final InputLogic inputLogic, final int keyCode) {
         print("sendDownUpKeyEvent");
         final long eventTime = SystemClock.uptimeMillis();
         inputLogic.mConnection.sendKeyEvent(new KeyEvent(eventTime, eventTime,
@@ -91,7 +92,7 @@ public final class engine {
      * @param codePoint the code point to send.
      */
     // TODO: replace these two parameters with an InputTransaction
-    public void sendKeyCodePoint(
+    static public void sendKeyCodePoint(
             final InputLogic inputLogic, final SettingsValues settingsValues, final int codePoint
     ) {
         print(
@@ -122,7 +123,7 @@ public final class engine {
         }
     }
 
-    public void handleNonSpecialCharacterEvent(
+    static public void handleNonSpecialCharacterEvent(
             final InputLogic inputLogic, final SettingsValues settingsValues,
             @Nonnull final Event currentEvent, final InputTransaction inputTransaction,
             final LatinIME.UIHandler handler){
@@ -153,7 +154,7 @@ public final class engine {
             if (inputLogic.mWordComposer.isComposingWord())
                 onCommitNormal(
                         inputLogic, inputTransaction, shouldAvoidSendingCode,
-                        settingsValues.mAutoCorrectionEnabledPerUserSettings,
+                        mAutoCorrectionEnabledPerUserSettings,
                         StringUtils.newSingleCodePointString(codePoint),
                         settingsValues, handler
                 );
@@ -352,7 +353,7 @@ public final class engine {
         }
     }
 
-    private void onCommitKeyCodePoint(
+    static public void onCommitKeyCodePoint(
             final InputLogic inputLogic, final SettingsValues settingsValues, final int codePoint
     ) {
         onCommit(
@@ -364,7 +365,7 @@ public final class engine {
         );
     }
 
-    private void onCommitCompletion(
+    static public void onCommitCompletion(
             final LatinIME latinIME, final CompletionInfo mApplicationSpecifiedCompletionInfo
     ) {
         onCommit(
@@ -376,7 +377,7 @@ public final class engine {
         );
     }
 
-    private void onCommitConnection(
+    static public void onCommitConnection(
             final InputLogic inputLogic, final InputTransaction inputTransaction,
             final SettingsValues settingsValues, final String whatToCommit
     ) {
@@ -389,7 +390,7 @@ public final class engine {
         );
     }
 
-    private void onCommitNormal(
+    static public void onCommitNormal(
             final InputLogic inputLogic, final InputTransaction inputTransaction,
             final boolean shouldAutoCorrect, final boolean shouldAvoidSendingCode,
             final String whatToCommit, final SettingsValues settingsValues,
@@ -397,14 +398,14 @@ public final class engine {
     ) {
         onCommit(
                 null, null, inputLogic, inputTransaction,
-                shouldAvoidSendingCode, settingsValues.mAutoCorrectionEnabledPerUserSettings,
+                shouldAvoidSendingCode, mAutoCorrectionEnabledPerUserSettings,
                 whatToCommit, null, 0, settingsValues,
                 handler, false, false, false,
                 false, 0
         );
     }
 
-    private void onCommitSuggestion(
+    static public void onCommitSuggestion(
             final LatinIME latinIME, final SettingsValues settingsValues, final String suggestion,
             final int commitTypeManualPick, final String separatorString) {
         onCommit(
@@ -416,7 +417,7 @@ public final class engine {
         );
     }
 
-    private void onCommitSuggestion(
+    static public void onCommitSuggestion(
             final InputLogic inputLogic, final SettingsValues settingsValues,
             final String suggestion, final int commitTypeManualPick, final String separatorString) {
         onCommit(
@@ -428,7 +429,7 @@ public final class engine {
         );
     }
 
-    private void onCommit(
+    static public void onCommit(
             final LatinIME latinIME, final CompletionInfo mApplicationSpecifiedCompletionInfo,
             final InputLogic inputLogic, final InputTransaction inputTransaction,
             final boolean shouldAutoCorrect, final boolean shouldAvoidSendingCode,
@@ -446,12 +447,14 @@ public final class engine {
             sendKeyCodePoint(inputLogic, settingsValues, codePoint);
         } else if (isSuggestion) {
             if (isCompletion) {
+                // TODO: can this be merged?
                 print("commit is a suggestion from completion");
                 inputLogic.commitChosenWord(
                         settingsValues, whatToCommit, commitTypeManualPick, separatorString
                 );
             } else {
                 print("commit is a suggestion");
+                // TODO: ADD TO SUGGESTION LIST
                 latinIME.mInputLogic.commitChosenWord(
                         settingsValues, whatToCommit, commitTypeManualPick, separatorString
                 );
@@ -519,6 +522,7 @@ public final class engine {
             } else {
                 print("commit is normal");
                 print("is space or new line, commit typed");
+                // TODO: ADD TO SUGGESTION LIST
                 inputLogic.commitTyped(settingsValues, whatToCommit);
             }
         }
@@ -529,7 +533,7 @@ public final class engine {
      * @param currentEvent The event to handle.
      * @param inputTransaction The transaction in progress.
      */
-    public void handleBackspaceEvent(
+    static public void handleBackspaceEvent(
             final InputLogic inputLogic, final SettingsValues settingsValues,
             @Nonnull final Event currentEvent, final InputTransaction inputTransaction,
             final int currentKeyboardScriptId
@@ -736,7 +740,7 @@ public final class engine {
         }
     }
 
-    public void process(
+    static public void process(
             final LatinIME latinIME, final boolean isHardwareKey,
             final InputLogic inputLogic, final SettingsValues settingsValues,
             @Nonnull final Event unprocessedEvent, final int keyboardShiftMode, final int spaceState,
@@ -852,8 +856,8 @@ public final class engine {
                 print("currentEvent codePoint          : " + currentEvent.mCodePoint);
                 print("currentEvent codePoint as string: " +
                         StringUtils.newSingleCodePointString(currentEvent.mCodePoint));
-//                new engine().onTextEntry(inputLogic.mWordComposer.getTypedWord(), engine.types.MULTI_CHARACTER);
-//                new engine().onTextEntry(codePointString, engine.types.SINGLE_CHARACTER);
+//                engine.onTextEntry(inputLogic.mWordComposer.getTypedWord(), engine.types.MULTI_CHARACTER);
+//                engine.onTextEntry(codePointString, engine.types.SINGLE_CHARACTER);
 
                 // handleNonFunctionalEvent
 
@@ -936,7 +940,7 @@ public final class engine {
         }
     }
 
-    public void processUI(LatinIME latinIME, EditorInfo editorInfo, boolean restarting) {
+    static public void processUI(LatinIME latinIME, EditorInfo editorInfo, boolean restarting) {
         latinIME.mDictionaryFacilitator.onStartInput();
         // Switch to the null consumer to handle cases leading to early exit below, for which we
         // also wouldn't be consuming gesture data.
@@ -1220,7 +1224,7 @@ public final class engine {
      *   to a cursor move, for example). In ICS, there is a platform bug that we need to work
      *   around only when we come here at input start time.
      */
-    public void restartSuggestionsOnWordTouchedByCursor(
+    static public void restartSuggestionsOnWordTouchedByCursor(
             final InputLogic inputLogic, final SettingsValues settingsValues,
             final boolean forStartInput, final int currentKeyboardScriptId) {
         // TODO: should we handle spelling correction suggestions?
@@ -1402,7 +1406,7 @@ public final class engine {
     }
 
 
-    public void handleMessage(LatinIME.UIHandler uiHandler, LatinIME latinIME, Message msg) {
+    static public void handleMessage(LatinIME.UIHandler uiHandler, LatinIME latinIME, Message msg) {
         final KeyboardSwitcher switcher = latinIME.mKeyboardSwitcher;
         switch (msg.what) {
             case LatinIME.UIHandler.MSG_UPDATE_SUGGESTION_STRIP:
@@ -1497,7 +1501,7 @@ public final class engine {
      */
     // Called from {@link SuggestionStripView} through the {@link SuggestionStripView#Listener}
     // interface
-    public void onPickSuggestionManually(final LatinIME latinIME, final SettingsValues settingsValues,
+    static public void onPickSuggestionManually(final LatinIME latinIME, final SettingsValues settingsValues,
                                          final SuggestedWords.SuggestedWordInfo suggestionInfo, final int keyboardShiftState,
                                          final int currentKeyboardScriptId, final LatinIME.UIHandler handler) {
         final SuggestedWords suggestedWords = latinIME.mInputLogic.mSuggestedWords;
@@ -1571,18 +1575,18 @@ public final class engine {
         latinIME.updateStateAfterInputTransaction(inputTransaction);
     }
 
-    public static final class types {
-        public static final int NO_TYPE = -1;
-        public static final int BACKSPACE = 0;
-        public static final int SINGLE_CHARACTER = 1;
-        public static final int MULTI_CHARACTER = 2;
+    static public final class types {
+        static public final int NO_TYPE = -1;
+        static public final int BACKSPACE = 0;
+        static public final int SINGLE_CHARACTER = 1;
+        static public final int MULTI_CHARACTER = 2;
     }
-    public final String TAG = "predictive.engine";
+    static public final String TAG = "predictive.engine";
 
-    public final void print(String what) {
+    static public final void print(String what) {
         Log.e(TAG, what);
     }
-    public final void info(String letter, String type) {
+    static public final void info(String letter, String type) {
         print("letter: " + letter);
         print("type:   " + type);
     }
@@ -1593,15 +1597,15 @@ public final class engine {
      * @param type
      */
 
-    public final void onTextEntry(String letter, int type) {
+    static public final void onTextEntry(String letter, int type) {
         print("INPUT letter: " + letter + ", " + "type:   " + type);
     }
 
-    public final void onBackspace(String letter, int type) {
+    static public final void onBackspace(String letter, int type) {
         print("BACKSPACE letter: " + letter + ", " + "type:   " + type);
     }
 
-    private final SuggestedWords.SuggestedWordInfo newWord(String word) {
+    static public final SuggestedWords.SuggestedWordInfo newWord(String word) {
         return new SuggestedWords.SuggestedWordInfo(
                 word, "",
                 SuggestedWords.SuggestedWordInfo.MAX_SCORE,
@@ -1611,7 +1615,7 @@ public final class engine {
                 SuggestedWords.SuggestedWordInfo.NOT_A_CONFIDENCE /* autoCommitFirstWordConfidence */);
     }
 
-    public void getSuggestedWords(
+    static public void getSuggestedWords(
             final Suggest mSuggest, final WordComposer mWordComposer,
             final NgramContext ngramContextFromNthPreviousWordForSuggestion,
             final Keyboard keyboard, final SettingsValuesForSuggestion settingsValuesForSuggestion,
