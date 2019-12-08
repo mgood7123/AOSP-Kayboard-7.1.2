@@ -534,6 +534,7 @@ public final class engine {
             @Nonnull final Event currentEvent, final InputTransaction inputTransaction,
             final int currentKeyboardScriptId
     ) {
+        print("handleBackspaceEvent");
         // TODO: handle removing suggestions on backspace?
         inputLogic.mSpaceState = SpaceState.NONE;
         inputLogic.mDeleteCount++;
@@ -752,13 +753,13 @@ public final class engine {
         print("events are handled via a linked list, event = event.mNextEvent");
         while (null != currentEvent) {
             print("while (null != currentEvent)");
-            onTextEntry(inputLogic.mWordComposer.getTypedWord(), types.MULTI_CHARACTER);
             if (currentEvent.isConsumed()) {
                 print("currentEvent.isConsumed()");
                 print("letter: " + inputLogic.mWordComposer.getTypedWord());
-                print("currentEvent key: " + currentEvent.mKeyCode);
-                print("currentEvent codePoint: " + StringUtils.newSingleCodePointString(currentEvent.mCodePoint));
-//                new engine().onTextEntry(codePointString, engine.types.SINGLE_CHARACTER);
+                print("currentEvent key                : " + currentEvent.mKeyCode);
+                print("currentEvent codePoint          : " + currentEvent.mCodePoint);
+                print("currentEvent codePoint as string: " +
+                        StringUtils.newSingleCodePointString(currentEvent.mCodePoint));
                 // A consumed event may have text to commit and an update to the composing state, so
                 // we evaluate both. With some combiners, it's possible than an event contains both
                 // and we enter both of the following if clauses.
@@ -775,6 +776,10 @@ public final class engine {
                 }
             } else if (currentEvent.isFunctionalKeyEvent()) {
                 print("currentEvent.isFunctionalKeyEvent()");
+                print("currentEvent key                : " + currentEvent.mKeyCode);
+                print("currentEvent codePoint          : " + currentEvent.mCodePoint);
+                print("currentEvent codePoint as string: " +
+                        StringUtils.newSingleCodePointString(currentEvent.mCodePoint));
                 switch (currentEvent.mKeyCode) {
                     case Constants.CODE_DELETE:
                         handleBackspaceEvent(
@@ -843,8 +848,10 @@ public final class engine {
             } else {
                 print("!(currentEvent.isConsumed() || currentEvent.isFunctionalKeyEvent())");
                 print("letter: " + inputLogic.mWordComposer.getTypedWord());
-                print("currentEvent key: " + currentEvent.mKeyCode);
-                print("currentEvent codePoint: " + StringUtils.newSingleCodePointString(currentEvent.mCodePoint));
+                print("currentEvent key                : " + currentEvent.mKeyCode);
+                print("currentEvent codePoint          : " + currentEvent.mCodePoint);
+                print("currentEvent codePoint as string: " +
+                        StringUtils.newSingleCodePointString(currentEvent.mCodePoint));
 //                new engine().onTextEntry(inputLogic.mWordComposer.getTypedWord(), engine.types.MULTI_CHARACTER);
 //                new engine().onTextEntry(codePointString, engine.types.SINGLE_CHARACTER);
 
