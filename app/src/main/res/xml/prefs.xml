@@ -41,4 +41,8 @@
         android:fragment="com.android.inputmethod.latin.settings.AdvancedSettingsFragment"
         android:title="@string/settings_screen_advanced"
         android:key="screen_advanced" />
+    <PreferenceScreen
+        android:fragment="com.android.inputmethod.latin.settings.PredictiveEngineSettingsFragment"
+        android:title="@string/settings_screen_predictive_engine"
+        android:key="screen_predictive_engine" />
 </PreferenceScreen>

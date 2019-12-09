@@ -48,6 +48,8 @@
     <string name="settings_screen_correction">Text correction</string>
     <!-- Settings screen title for advanced settings [CHAR LIMIT=33] -->
     <string name="settings_screen_advanced">Advanced</string>
+    <!-- Settings screen title for Prediction Engine settings [CHAR LIMIT=33] -->
+    <string name="settings_screen_predictive_engine">Prediction Engine</string>
     <!-- Settings screen title for keyboard theme settings [CHAR LIMIT=33] -->
     <string name="settings_screen_theme">Theme</string>
 
@@ -143,9 +145,9 @@
     <string name="prefs_show_suggestions_summary">Display suggested words while typing</string>
 
     <!-- Option to use the custom predictive engine [CHAR_LIMIT=30] -->
-    <string name="prefs_predictive_engine_version_two_title" translatable="false">Predictive Engine v2</string>
+    <string name="prefs_predictive_engine_version_two_title" translatable="false">Predictive Engine</string>
     <!-- Summary for option to use the custom predictive engine [CHAR_LIMIT=80 (two lines) or 40 (fits on one line, preferable)] -->
-    <string name="prefs_predictive_engine_version_two_summary" translatable="false">Use the Predictive Engine v2, disables everything else</string>
+    <string name="prefs_predictive_engine_version_two_summary" translatable="false">Use the Predictive Engine, disables everything else</string>
 
     <!-- Option to block potentially offensive words to be shown [CHAR_LIMIT=30] -->
     <string name="prefs_block_potentially_offensive_title">Block offensive words</string>

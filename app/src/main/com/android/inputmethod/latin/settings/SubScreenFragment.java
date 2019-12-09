@@ -44,11 +44,6 @@ public abstract class SubScreenFragment extends PreferenceFragment
         }
     }
 
-
-    static void setPreferenceDisabled(final String prefKey, final PreferenceScreen screen) {
-        setPreferenceEnabled(prefKey, false, screen);
-    }
-
     void setPreferenceDisabled(final String prefKey) {
         setPreferenceEnabled(prefKey, false);
     }

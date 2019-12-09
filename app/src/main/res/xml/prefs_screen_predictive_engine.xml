@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/settings_screen_predictive_engine"
+    android:key="predictive_engine">
+    <CheckBoxPreference
+        android:key="pref_predictive_engine_version_two"
+        android:title="@string/prefs_predictive_engine_version_two_title"
+        android:summary="@string/prefs_predictive_engine_version_two_summary"
+        android:defaultValue="@bool/config_predictive_engine_version_two"
+        android:persistent="true" />
+    <Preference
+        android:key="pref_predictive_engine_version_two_clear"
+        android:title="Clear Prediction Engine data"
+        android:persistent="false">
+    </Preference>
+
+</PreferenceScreen>
