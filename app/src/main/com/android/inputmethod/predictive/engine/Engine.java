@@ -55,7 +55,7 @@ import static com.android.inputmethod.latin.common.Constants.ImeOption.NO_FLOATI
 import static com.android.inputmethod.latin.common.Constants.ImeOption.NO_MICROPHONE;
 import static com.android.inputmethod.latin.common.Constants.ImeOption.NO_MICROPHONE_COMPAT;
 
-public final class engine {
+public final class Engine {
     
     public static Tools tools = new Tools();
     public static Tools.Database database = new Tools.Database();
@@ -865,8 +865,6 @@ public final class engine {
                 print("currentEvent codePoint          : " + currentEvent.mCodePoint);
                 print("currentEvent codePoint as string: " +
                         StringUtils.newSingleCodePointString(currentEvent.mCodePoint));
-//                engine.onTextEntry(inputLogic.mWordComposer.getTypedWord(), engine.types.MULTI_CHARACTER);
-//                engine.onTextEntry(codePointString, engine.types.SINGLE_CHARACTER);
 
                 // handleNonFunctionalEvent
 

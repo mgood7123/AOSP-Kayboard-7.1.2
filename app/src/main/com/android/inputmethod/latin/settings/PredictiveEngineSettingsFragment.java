@@ -1,18 +1,8 @@
 package com.android.inputmethod.latin.settings;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.res.Resources;
-import android.media.AudioManager;
 import android.os.Bundle;
-import android.preference.ListPreference;
 import android.preference.Preference;
-import android.preference.PreferenceGroup;
-import android.text.TextUtils;
-
-import com.android.inputmethod.latin.AudioAndHapticFeedbackManager;
-import com.android.inputmethod.latin.SystemBroadcastReceiver;
-import com.android.inputmethod.predictive.engine.engine;
+import com.android.inputmethod.predictive.engine.Engine;
 
 import AOSP.KEYBOARD.R;
 
@@ -27,7 +17,7 @@ public final class PredictiveEngineSettingsFragment extends SubScreenFragment
     public boolean onPreferenceClick(Preference preference) {
         String key = preference.getKey();
         if (key.equals("pref_predictive_engine_version_two_clear")) {
-            engine.database.reset();
+            Engine.database.reset();
             return true;
         }
         return false;

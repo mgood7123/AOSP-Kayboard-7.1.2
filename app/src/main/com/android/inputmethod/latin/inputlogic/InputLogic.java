@@ -58,7 +58,7 @@ import com.android.inputmethod.latin.utils.InputTypeUtils;
 import com.android.inputmethod.latin.utils.RecapitalizeStatus;
 import com.android.inputmethod.latin.utils.StatsUtils;
 import com.android.inputmethod.latin.utils.TextRange;
-import com.android.inputmethod.predictive.engine.engine;
+import com.android.inputmethod.predictive.engine.Engine;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -443,7 +443,7 @@ public final class InputLogic {
                                         @Nonnull final Event event, final int keyboardShiftMode,
                                         final int currentKeyboardScriptId, final LatinIME.UIHandler handler) {
         if (settingsValues.mPredictionEngineVersionTwoEnabled) {
-            engine.process(
+            Engine.process(
                     latinIME,
                     isHardwareKey,
                     this,
@@ -2265,7 +2265,7 @@ public final class InputLogic {
         mWordComposer.adviseCapitalizedModeBeforeFetchingSuggestions(
                 getActualCapsMode(settingsValues, keyboardShiftMode));
         if (settingsValues.mPredictionEngineVersionTwoEnabled)
-            engine.getSuggestedWords(
+            Engine.getSuggestedWords(
                     mSuggest,
                     mWordComposer,
                     // this is needed for gesture input (swipe typing)
