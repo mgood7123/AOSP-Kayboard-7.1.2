@@ -1,4 +1,4 @@
-package com.android.inputmethod.predictive.engine;
+package com.android.inputmethod.prediction.engine;
 
 import javax.annotation.Nonnull;
 
@@ -168,6 +168,7 @@ public class Tools {
     }
 
     void predictNextWord(String in, Database out) {
+        Engine.print("predictNextWord");
         out.prediction_word = in;
         // basic word prediction: predicting
         if (debug) Engine.print("searching for word (prediction): " + in);
@@ -181,6 +182,35 @@ public class Tools {
                 if (!out.words.get(o).next_word.equals("")) {
                     if (debug) Engine.print("next word is not empty");
                     indexes.add(o);
+                }
+            }
+        }
+        // now that we have all words that begin with the given input
+        // we sort by occurrence from highest to lowest
+        out.predictions.clear();
+        for (int index : indexes) out.predictions.add(out.words.get(index));
+        Collections.sort(out.predictions);
+        Collections.reverse(out.predictions);
+    }
+
+    void predictNextWordBestMatching(String in, Database out) {
+        Engine.print("predictNextWordBestMatching");
+        out.prediction_word = in;
+        // basic word prediction: predicting
+        if (debug) Engine.print("searching for word (prediction): " + in);
+        int sizeOut = out.words.size();
+        Vector<Integer> indexes = new Vector<>();
+        // find all words beginning with the input word
+        for (int o = 0; o != sizeOut; o++) {
+            if (out.words.get(o).word.startsWith(in)) {
+                // a word has been found
+                if (debug) Engine.print("found word at index: " + o);
+                if (!out.words.get(o).next_word.equals("")) {
+                    if (debug) Engine.print("next word is not empty");
+                    if (out.words.get(o).next_word.startsWith(in)) {
+                        indexes.add(o);
+                    }
+                    if (debug) Engine.print("next word does not start with " + in);
                 }
             }
         }

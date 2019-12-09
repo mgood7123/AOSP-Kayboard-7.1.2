@@ -144,10 +144,12 @@
     <!-- Description for show suggestions -->
     <string name="prefs_show_suggestions_summary">Display suggested words while typing</string>
 
-    <!-- Option to use the custom predictive engine [CHAR_LIMIT=30] -->
-    <string name="prefs_predictive_engine_version_two_title" translatable="false">Predictive Engine</string>
-    <!-- Summary for option to use the custom predictive engine [CHAR_LIMIT=80 (two lines) or 40 (fits on one line, preferable)] -->
-    <string name="prefs_predictive_engine_version_two_summary" translatable="false">Use the Predictive Engine, disables everything else</string>
+    <string name="prefs_PredictionEngine">pref_PredictionEngine</string>
+    <string name="prefs_PredictionEngineAllowNonWords">pref_PredictionEngineAllowNonWords</string>
+    <string name="pref_PredictionEngineAllowAndroidTextViewEmulation">pref_PredictionEngineAllowNonWords</string>
+    <string name="prefs_PredictionEngineAutoCorrectionEnabledPerUserSettings">pref_PredictionEngineAutoCorrectionEnabledPerUserSettings</string>
+    <string name="prefs_PredictionEngineSuggestBestMatching">pref_PredictionEngineSuggestBestMatching</string>
+    <string name="prefs_PredictionEngineClearData">pref_PredictionEngineClearData</string>
 
     <!-- Option to block potentially offensive words to be shown [CHAR_LIMIT=30] -->
     <string name="prefs_block_potentially_offensive_title">Block offensive words</string>

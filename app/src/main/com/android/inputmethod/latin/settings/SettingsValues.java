@@ -75,7 +75,7 @@ public class SettingsValues {
     public final boolean mBlockPotentiallyOffensive;
     // Use bigrams to predict the next word when there is no input for it yet
     public final boolean mBigramPredictionEnabled;
-    public final boolean mPredictionEngineVersionTwoEnabled;
+    public final boolean mPredictionEngineEnabled;
     public final boolean mGestureInputEnabled;
     public final boolean mGestureTrailEnabled;
     public final boolean mGestureFloatingPreviewTextEnabled;
@@ -105,6 +105,12 @@ public class SettingsValues {
     public final boolean mAutoCorrectionEnabledPerUserSettings;
     private final boolean mSuggestionsEnabledPerUserSettings;
     private final AsyncResultHolder<AppWorkaroundsUtils> mAppWorkarounds;
+
+    // Prediction Engine settings
+    public boolean mPredictionEngineAllowNonWords;
+    public boolean mPredictionEngineAllowAndroidTextViewEmulation;
+    public boolean mPredictionEngineAutoCorrectionEnabledPerUserSettings;
+    public boolean mPredictionEngineSuggestBestMatching;
 
     // Debug settings
     public final boolean mIsInternal;
@@ -156,7 +162,31 @@ public class SettingsValues {
                 ? res.getString(R.string.auto_correction_threshold_mode_index_modest)
                 : res.getString(R.string.auto_correction_threshold_mode_index_off);
         mBigramPredictionEnabled = readBigramPredictionEnabled(prefs, res);
-        mPredictionEngineVersionTwoEnabled = readPredictionEngineVersionTwoEnabled(prefs, res);
+        mPredictionEngineEnabled = readPredictionEngineKey(
+                prefs, res,
+                Settings.PREF_PredictionEngine,
+                R.bool.config_PredictionEngine
+        );
+        mPredictionEngineAllowNonWords = readPredictionEngineKey(
+                prefs, res,
+                Settings.PREF_PredictionEngineAllowNonWords,
+                R.bool.config_PredictionEngineAllowNonWords
+        );
+        mPredictionEngineAllowAndroidTextViewEmulation = readPredictionEngineKey(
+                prefs, res,
+                Settings.PREF_PredictionEngineAllowAndroidTextViewEmulation,
+                R.bool.config_PredictionEngineAllowAndroidTextViewEmulation
+        );
+        mPredictionEngineAutoCorrectionEnabledPerUserSettings = readPredictionEngineKey(
+                prefs, res,
+                Settings.PREF_PredictionEngineAutoCorrectionEnabledPerUserSettings,
+                R.bool.config_PredictionEngineAutoCorrectionEnabledPerUserSettings
+        );
+        mPredictionEngineSuggestBestMatching = readPredictionEngineKey(
+                prefs, res,
+                Settings.PREF_PredictionEngineSuggestBestMatching,
+                R.bool.config_PredictionEngineSuggestBestMatching
+        );
         mDoubleSpacePeriodTimeout = res.getInteger(R.integer.config_double_space_period_timeout);
         mHasHardwareKeyboard = Settings.readHasHardwareKeyboard(res.getConfiguration());
         mEnableMetricsLogging = prefs.getBoolean(Settings.PREF_ENABLE_METRICS_LOGGING, true);
@@ -323,10 +353,11 @@ public class SettingsValues {
                 R.bool.config_default_next_word_prediction));
     }
 
-    private static boolean readPredictionEngineVersionTwoEnabled(final SharedPreferences prefs,
-            final Resources res) {
-        return prefs.getBoolean(Settings.PREF_PREDICTIVE_ENGINE_VERSION_TWO, res.getBoolean(
-                R.bool.config_predictive_engine_version_two));
+    private static boolean readPredictionEngineKey(
+            final SharedPreferences prefs, final Resources res,
+            final String Key, final int ConfigKey
+    ) {
+        return prefs.getBoolean(Key, res.getBoolean(ConfigKey));
     }
 
     private static float readAutoCorrectionThreshold(final Resources res,

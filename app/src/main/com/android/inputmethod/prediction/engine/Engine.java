@@ -1,4 +1,4 @@
-package com.android.inputmethod.predictive.engine;
+package com.android.inputmethod.prediction.engine;
 
 import android.os.Debug;
 import android.os.Message;
@@ -60,9 +60,6 @@ public final class Engine {
     public static Tools tools = new Tools();
     public static Tools.Database database = new Tools.Database();
 
-    static boolean predictionAllowNonWords = true;
-    static boolean allowAndroidTextViewEmulation = false;
-    static boolean mAutoCorrectionEnabledPerUserSettings = false;
     // suggestion strip updates are triggered by updateStateAfterInputTransaction
 
     /**
@@ -158,7 +155,7 @@ public final class Engine {
                 // TODO: onCommitSpace
                 onCommitNormal(
                         inputLogic, inputTransaction, shouldAvoidSendingCode,
-                        mAutoCorrectionEnabledPerUserSettings,
+                        settingsValues.mPredictionEngineAutoCorrectionEnabledPerUserSettings,
                         StringUtils.newSingleCodePointString(codePoint),
                         settingsValues, handler
                 );
@@ -250,9 +247,9 @@ public final class Engine {
                     print("is NOT space or new line, commit typed");
                     onCommitNormal(
                             inputLogic, inputTransaction,
-                            false, false,
-                            null, inputTransaction.mSettingsValues,
-                            handler
+                            settingsValues.mPredictionEngineAutoCorrectionEnabledPerUserSettings,
+                            false, null,
+                            inputTransaction.mSettingsValues, handler
                     );
                 }
             }
@@ -287,7 +284,7 @@ public final class Engine {
                 inputLogic.resetEntireInputState(inputLogic.mConnection.getExpectedSelectionStart(),
                         inputLogic.mConnection.getExpectedSelectionEnd(), true);
                 // if true then keep composing, otherwise obey above
-                isComposingWord = predictionAllowNonWords;
+                isComposingWord = settingsValues.mPredictionEngineAllowNonWords;
             }
             // We want to find out whether to start composing a new word with this character. If so,
             // we need to reset the composing state and switch isComposingWord. The order of the
@@ -299,8 +296,8 @@ public final class Engine {
 
                     // start composing even if this is not a word code point
 
-                    // if predictionAllowNonWords is false then only compose on word code point
-                    && (predictionAllowNonWords || settingsValues.isWordCodePoint(codePoint2))
+                    // if settingsValues.mPredictionEngineAllowNonWords is false then only compose on word code point
+                    && (settingsValues.mPredictionEngineAllowNonWords || settingsValues.isWordCodePoint(codePoint2))
 
                     // We never go into composing state if suggestions are not requested.
                     && settingsValues.needsToLookupSuggestions() &&
@@ -312,10 +309,10 @@ public final class Engine {
                     // TODO: Cache the text after the cursor so we don't need to go to the InputConnection
                     //  each time. We are already doing this for getTextBeforeCursor().
                     (!settingsValues.mSpacingAndPunctuations.mCurrentLanguageHasSpaces
-                            // if predictionAllowNonWords is true then start composing even if
+                            // if settingsValues.mPredictionEngineAllowNonWords is true then start composing even if
                             // the cursor is touching a word
                             || (
-                            predictionAllowNonWords || !inputLogic.mConnection.isCursorTouchingWord(
+                            settingsValues.mPredictionEngineAllowNonWords || !inputLogic.mConnection.isCursorTouchingWord(
                                     settingsValues.mSpacingAndPunctuations,
                                     !inputLogic.mConnection.hasSlowInputConnection() /* checkTextAfter  */
                             )
@@ -326,9 +323,9 @@ public final class Engine {
                 // the character is a word connector. The idea here is, word connectors are not
                 // separators and they should be treated as normal characters, except in the first
                 // position where they should not start composing a word.
-                // if predictionAllowNonWords is true then keep composing regardless if symbol,
+                // if settingsValues.mPredictionEngineAllowNonWords is true then keep composing regardless if symbol,
                 // otherwise obey above
-                isComposingWord = predictionAllowNonWords ||
+                isComposingWord = settingsValues.mPredictionEngineAllowNonWords ||
                         !settingsValues.mSpacingAndPunctuations.isWordConnector(codePoint2);
                 // Here we don't need to reset the last composed word. It will be reset
                 // when we commit this one, if we ever do; if on the other hand we backspace
@@ -402,10 +399,9 @@ public final class Engine {
     ) {
         onCommit(
                 null, null, inputLogic, inputTransaction,
-                shouldAvoidSendingCode, mAutoCorrectionEnabledPerUserSettings,
-                whatToCommit, null, 0, settingsValues,
-                handler, false, false, false,
-                false, 0
+                shouldAvoidSendingCode, shouldAutoCorrect, whatToCommit, null,
+                0, settingsValues, handler, false,
+                false, false, false, 0
         );
     }
 
@@ -1088,7 +1084,7 @@ public final class Engine {
                 } else if (InputType.TYPE_NULL == inputType) {
                     // TODO: We should honor TYPE_NULL specification.
                     Log.i(TAG, "InputType.TYPE_NULL is specified");
-                    inputAttributes.AndroidTextViewEmulation = allowAndroidTextViewEmulation;
+                    inputAttributes.AndroidTextViewEmulation = currentSettingsValues.mPredictionEngineAllowAndroidTextViewEmulation;
                 } else if (inputClass == 0) {
                     // TODO: is this check still necessary?
                     Log.w(TAG, String.format("Unexpected input class: inputType=0x%08x"
@@ -1177,7 +1173,7 @@ public final class Engine {
             mainKeyboardView.closing();
             currentSettingsValues = latinIME.mSettings.getCurrent();
 
-            if (currentSettingsValues.mAutoCorrectionEnabledPerUserSettings) {
+            if (currentSettingsValues.mPredictionEngineAutoCorrectionEnabledPerUserSettings) {
                 suggest.setAutoCorrectionThreshold(
                         currentSettingsValues.mAutoCorrectionThreshold);
             }
@@ -1259,7 +1255,7 @@ public final class Engine {
         final int expectedCursorPosition = inputLogic.mConnection.getExpectedSelectionStart();
 
         // if true, suggestions obey isCursorTouchingWord
-        if (false)
+        if (!settingsValues.mPredictionEngineAllowNonWords)
             if (!inputLogic.mConnection.isCursorTouchingWord(settingsValues.mSpacingAndPunctuations,
                 true /* checkTextAfter */)) {
             // Show predictions.
@@ -1287,7 +1283,7 @@ public final class Engine {
                 int startIndexInBefore = before.length();
                 while (startIndexInBefore > 0) {
                     final int codePoint = Character.codePointBefore(before, startIndexInBefore);
-                    if (!predictionAllowNonWords) {
+                    if (!settingsValues.mPredictionEngineAllowNonWords) {
                         if (!(settingsValues.mSpacingAndPunctuations.isWordConnector(codePoint)
                                 // Otherwise, it's part of composition if it's part of script and not a separator.
                                 || (!settingsValues.mSpacingAndPunctuations.isWordSeparator(codePoint)
@@ -1309,7 +1305,7 @@ public final class Engine {
                 while (++endIndexInAfter < after.length()) {
                     final int codePoint = Character.codePointAt(after, endIndexInAfter);
                     // We always consider word connectors part of compositions.
-                    if (!predictionAllowNonWords) {
+                    if (!settingsValues.mPredictionEngineAllowNonWords) {
                         if (!(settingsValues.mSpacingAndPunctuations.isWordConnector(codePoint)
                                 // Otherwise, it's part of composition if it's part of script and not a separator.
                                 || (!settingsValues.mSpacingAndPunctuations.isWordSeparator(codePoint)
@@ -1361,7 +1357,7 @@ public final class Engine {
                 SuggestedWords.SuggestedWordInfo.NOT_AN_INDEX /* indexOfTouchPointOfSecondWord */,
                 SuggestedWords.SuggestedWordInfo.NOT_A_CONFIDENCE /* autoCommitFirstWordConfidence */);
         suggestions.add(typedWordInfo);
-        if (!predictionAllowNonWords) if (!inputLogic.isResumableWord(settingsValues, typedWordString)) {
+        if (!settingsValues.mPredictionEngineAllowNonWords) if (!inputLogic.isResumableWord(settingsValues, typedWordString)) {
             inputLogic.mSuggestionStripViewAccessor.setNeutralSuggestionStrip();
             return;
         }
@@ -1627,7 +1623,8 @@ public final class Engine {
             final NgramContext ngramContextFromNthPreviousWordForSuggestion,
             final Keyboard keyboard, final SettingsValuesForSuggestion settingsValuesForSuggestion,
             final boolean isCorrectionEnabled, final int inputStyle, final int sequenceNumber,
-            final Suggest.OnGetSuggestedWordsCallback callback) {
+            final Suggest.OnGetSuggestedWordsCallback callback, final SettingsValues settingsValues
+    ) {
         if (mWordComposer.isBatchMode()) {
             print("BATCH MODE SUGGESTION (gesture input (swipe typing))");
             // forward to suggest.getSuggestedWordsForBatchInput as we do not yet know how to handle
@@ -1651,24 +1648,34 @@ public final class Engine {
                     mWordComposer.getTypedWord().equals("\n") ||
                     mWordComposer.getTypedWord().equals("")
             ) tools.predictNextWord(database);
-            else tools.predictNextWord(mWordComposer.getTypedWord(), database);
+            else {
+                // if true, try to suggest best matching word
+                if (settingsValues.mPredictionEngineSuggestBestMatching)
+                    tools.predictNextWordBestMatching(mWordComposer.getTypedWord(), database);
+                else tools.predictNextWord(mWordComposer.getTypedWord(), database);
+            }
             tools.printPredictions(database);
-            for (int i = 0; i != database.predictions.size(); i++)
-                suggestionsList.add(newWord(database.predictions.get(i).next_word));
-
-            callback.onGetSuggestedWords(
-                    new SuggestedWords(
-                            suggestionsList,
-                            null,
-                            null,
-                            false,
-                            false,
-                            false,
-                            SuggestedWords.INPUT_STYLE_PREDICTION,
-                            // what is sequence number used for?
-                            sequenceNumber
-                    )
-            );
+            if (database.predictions.size() == 0) {
+                print("database.predictions.size is zero");
+                // TODO: figure out how to clear the suggestion strip
+                callback.onGetSuggestedWords(SuggestedWords.getEmptyInstance());
+            } else {
+                for (int i = 0; i != database.predictions.size(); i++)
+                    suggestionsList.add(newWord(database.predictions.get(i).next_word));
+                callback.onGetSuggestedWords(
+                        new SuggestedWords(
+                                suggestionsList,
+                                null,
+                                null,
+                                false,
+                                false,
+                                false,
+                                SuggestedWords.INPUT_STYLE_PREDICTION,
+                                // what is sequence number used for?
+                                sequenceNumber
+                        )
+                );
+            }
         }
     }
 }

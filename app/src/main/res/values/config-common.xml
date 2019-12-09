@@ -19,7 +19,11 @@
 -->
 
 <resources>
-    <bool name="config_predictive_engine_version_two">false</bool>
+    <bool name="config_PredictionEngine">false</bool>
+    <bool name="config_PredictionEngineAllowNonWords">true</bool>
+    <bool name="config_PredictionEngineAllowAndroidTextViewEmulation">false</bool>
+    <bool name="config_PredictionEngineAutoCorrectionEnabledPerUserSettings">false</bool>
+    <bool name="config_PredictionEngineSuggestBestMatching">true</bool>
     <bool name="config_block_potentially_offensive">true</bool>
     <!-- Default value for next word prediction: after entering a word and a space only, should we
          look at input history to suggest a hopefully helpful suggestions for the next word? -->

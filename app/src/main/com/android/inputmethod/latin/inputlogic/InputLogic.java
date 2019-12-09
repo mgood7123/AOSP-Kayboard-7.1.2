@@ -58,7 +58,7 @@ import com.android.inputmethod.latin.utils.InputTypeUtils;
 import com.android.inputmethod.latin.utils.RecapitalizeStatus;
 import com.android.inputmethod.latin.utils.StatsUtils;
 import com.android.inputmethod.latin.utils.TextRange;
-import com.android.inputmethod.predictive.engine.Engine;
+import com.android.inputmethod.prediction.engine.Engine;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -442,7 +442,7 @@ public final class InputLogic {
     public void onCodeInput(final LatinIME latinIME, final boolean isHardwareKey, final SettingsValues settingsValues,
                                         @Nonnull final Event event, final int keyboardShiftMode,
                                         final int currentKeyboardScriptId, final LatinIME.UIHandler handler) {
-        if (settingsValues.mPredictionEngineVersionTwoEnabled) {
+        if (settingsValues.mPredictionEngineEnabled) {
             Engine.process(
                     latinIME,
                     isHardwareKey,
@@ -2264,7 +2264,7 @@ public final class InputLogic {
             final int sequenceNumber, final OnGetSuggestedWordsCallback callback) {
         mWordComposer.adviseCapitalizedModeBeforeFetchingSuggestions(
                 getActualCapsMode(settingsValues, keyboardShiftMode));
-        if (settingsValues.mPredictionEngineVersionTwoEnabled)
+        if (settingsValues.mPredictionEngineEnabled)
             Engine.getSuggestedWords(
                     mSuggest,
                     mWordComposer,
@@ -2281,7 +2281,8 @@ public final class InputLogic {
                     false,
                     inputStyle,
                     sequenceNumber,
-                    callback
+                    callback,
+                    settingsValues
             );
         else mSuggest.getSuggestedWords(
                     mWordComposer,

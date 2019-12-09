@@ -49,8 +49,6 @@ import android.view.inputmethod.CompletionInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodSubtype;
 
-import androidx.annotation.RequiresApi;
-
 import AOSP.KEYBOARD.R;
 import com.android.inputmethod.accessibility.AccessibilityUtils;
 import com.android.inputmethod.annotations.UsedForTesting;
@@ -95,7 +93,7 @@ import com.android.inputmethod.latin.utils.StatsUtils;
 import com.android.inputmethod.latin.utils.StatsUtilsManager;
 import com.android.inputmethod.latin.utils.SubtypeLocaleUtils;
 import com.android.inputmethod.latin.utils.ViewLayoutUtils;
-import com.android.inputmethod.predictive.engine.Engine;
+import com.android.inputmethod.prediction.engine.Engine;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -220,7 +218,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                 return;
             }
             final KeyboardSwitcher switcher = latinIme.mKeyboardSwitcher;
-            if (latinIme.mSettings.getCurrent().mPredictionEngineVersionTwoEnabled) {
+            if (latinIme.mSettings.getCurrent().mPredictionEngineEnabled) {
                 Engine.handleMessage(this, latinIme, msg);
             } else {
                 switch (msg.what) {
@@ -230,7 +228,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                                 latinIme.mSettings.getCurrent(), msg.arg1 /* inputStyle */);
                         break;
                     case MSG_UPDATE_SHIFT_STATE:
-                        if (latinIme.mSettings.getCurrent().mPredictionEngineVersionTwoEnabled) {
+                        if (latinIme.mSettings.getCurrent().mPredictionEngineEnabled) {
                             Engine.handleMessage(this, latinIme, msg);
                         } else {
                             switcher.requestUpdatingShiftState(latinIme.getCurrentAutoCapsState(),
@@ -247,7 +245,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                         }
                         break;
                     case MSG_RESUME_SUGGESTIONS:
-                        if (latinIme.mSettings.getCurrent().mPredictionEngineVersionTwoEnabled) {
+                        if (latinIme.mSettings.getCurrent().mPredictionEngineEnabled) {
                             Engine.handleMessage(this, latinIme, msg);
                         } else {
                             latinIme.mInputLogic.restartSuggestionsOnWordTouchedByCursor(
@@ -256,7 +254,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                         }
                         break;
                     case MSG_RESUME_SUGGESTIONS_FOR_START_INPUT:
-                        if (latinIme.mSettings.getCurrent().mPredictionEngineVersionTwoEnabled) {
+                        if (latinIme.mSettings.getCurrent().mPredictionEngineEnabled) {
                             Engine.handleMessage(this, latinIme, msg);
                         } else {
                             latinIme.mInputLogic.restartSuggestionsOnWordTouchedByCursor(
@@ -271,7 +269,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                         latinIme.resetDictionaryFacilitatorIfNecessary();
                         break;
                     case MSG_UPDATE_TAIL_BATCH_INPUT_COMPLETED:
-                        if (latinIme.mSettings.getCurrent().mPredictionEngineVersionTwoEnabled) {
+                        if (latinIme.mSettings.getCurrent().mPredictionEngineEnabled) {
                             Engine.handleMessage(this, latinIme, msg);
                         } else {
                             final SuggestedWords suggestedWords = (SuggestedWords) msg.obj;
@@ -282,7 +280,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                         }
                         break;
                     case MSG_RESET_CACHES:
-                        if (latinIme.mSettings.getCurrent().mPredictionEngineVersionTwoEnabled) {
+                        if (latinIme.mSettings.getCurrent().mPredictionEngineEnabled) {
                             Engine.handleMessage(this, latinIme, msg);
                         } else {
                             final SettingsValues settingsValues = latinIme.mSettings.getCurrent();
@@ -304,7 +302,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                         latinIme.deallocateMemory();
                         break;
                     case MSG_SWITCH_LANGUAGE_AUTOMATICALLY:
-                        if (latinIme.mSettings.getCurrent().mPredictionEngineVersionTwoEnabled) {
+                        if (latinIme.mSettings.getCurrent().mPredictionEngineEnabled) {
                             Engine.handleMessage(this, latinIme, msg);
                         } else {
                             latinIme.switchLanguage((InputMethodSubtype) msg.obj);
@@ -857,7 +855,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     @SuppressWarnings("deprecation")
     void onStartInputViewInternal(final EditorInfo editorInfo, final boolean restarting) {
         super.onStartInputView(editorInfo, restarting);
-        if (mSettings.getCurrent().mPredictionEngineVersionTwoEnabled) {
+        if (mSettings.getCurrent().mPredictionEngineEnabled) {
             Engine.processUI(this, editorInfo, restarting);
         } else {
             mDictionaryFacilitator.onStartInput();
@@ -1595,7 +1593,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     // interface
     @Override
     public void pickSuggestionManually(final SuggestedWordInfo suggestionInfo) {
-        if (mSettings.getCurrent().mPredictionEngineVersionTwoEnabled)
+        if (mSettings.getCurrent().mPredictionEngineEnabled)
             Engine.onPickSuggestionManually(this,
                     mSettings.getCurrent(), suggestionInfo,
                     mKeyboardSwitcher.getKeyboardShiftMode(),
@@ -1613,7 +1611,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     @Override
     public void setNeutralSuggestionStrip() {
         final SettingsValues currentSettings = mSettings.getCurrent();
-        if (currentSettings.mPredictionEngineVersionTwoEnabled) {
+        if (currentSettings.mPredictionEngineEnabled) {
             setSuggestedWords(SuggestedWords.getEmptyInstance());
         } else setSuggestedWords(
                 currentSettings.mBigramPredictionEnabled

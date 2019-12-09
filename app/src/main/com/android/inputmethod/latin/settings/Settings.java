@@ -69,8 +69,6 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_KEY_USE_PERSONALIZED_DICTS = "pref_key_use_personalized_dicts";
     public static final String PREF_KEY_USE_DOUBLE_SPACE_PERIOD =
             "pref_key_use_double_space_period";
-    public static final String PREF_PREDICTIVE_ENGINE_VERSION_TWO =
-            "pref_predictive_engine_version_two";
     public static final String PREF_BLOCK_POTENTIALLY_OFFENSIVE =
             "pref_key_block_potentially_offensive";
     public static final boolean ENABLE_SHOW_LANGUAGE_SWITCH_KEY_SETTINGS =
@@ -118,6 +116,14 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_EMOJI_RECENT_KEYS = "emoji_recent_keys";
     public static final String PREF_EMOJI_CATEGORY_LAST_TYPED_ID = "emoji_category_last_typed_id";
     public static final String PREF_LAST_SHOWN_EMOJI_CATEGORY_ID = "last_shown_emoji_category_id";
+
+    // Prediction Engine
+    public static final String PREF_PredictionEngine = "pref_PredictionEngine";
+    public static final String PREF_PredictionEngineAllowNonWords = "pref_PredictionEngineAllowNonWords";
+    public static final String PREF_PredictionEngineAllowAndroidTextViewEmulation = "pref_PredictionEngineAllowAndroidTextViewEmulation";
+    public static final String PREF_PredictionEngineAutoCorrectionEnabledPerUserSettings = "pref_PredictionEngineAutoCorrectionEnabledPerUserSettings";
+    public static final String PREF_PredictionEngineSuggestBestMatching = "pref_PredictionEngineSuggestBestMatching";
+    public static final String PREF_PredictionEngineClearData = "pref_PredictionEngineClearData";
 
     private static final float UNDEFINED_PREFERENCE_VALUE_FLOAT = -1.0f;
     private static final int UNDEFINED_PREFERENCE_VALUE_INT = -1;

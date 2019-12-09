@@ -1,16 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:title="@string/settings_screen_predictive_engine"
+    android:title="Prediction Engine"
     android:key="predictive_engine">
     <CheckBoxPreference
-        android:key="pref_predictive_engine_version_two"
-        android:title="@string/prefs_predictive_engine_version_two_title"
-        android:summary="@string/prefs_predictive_engine_version_two_summary"
-        android:defaultValue="@bool/config_predictive_engine_version_two"
+        android:key="@string/prefs_PredictionEngine"
+        android:title="Prediction Engine"
+        android:summary="Use the Prediction Engine instead Android\'s built-in Text Prediction Engine"
+        android:defaultValue="@bool/config_PredictionEngine"
+        android:persistent="true" />
+    <CheckBoxPreference
+        android:key="@string/prefs_PredictionEngineAllowNonWords"
+        android:title="Allow Non Words"
+        android:summary="Allows text replacement for symbols and other languages (eg chinese)"
+        android:defaultValue="@bool/config_PredictionEngineAllowNonWords"
+        android:persistent="true" />
+    <CheckBoxPreference
+        android:key="@string/prefs_PredictionEngineAllowNonWords"
+        android:title="Allow Android Text View Emulation"
+        android:summary="BETA: allow rich input in terminal like fields"
+        android:defaultValue="@bool/config_PredictionEngineAllowAndroidTextViewEmulation"
+        android:persistent="true" />
+    <CheckBoxPreference
+        android:key="@string/prefs_PredictionEngineAutoCorrectionEnabledPerUserSettings"
+        android:title="Auto Correction"
+        android:summary="Allows for Auto Correction to occur"
+        android:defaultValue="@bool/config_PredictionEngineAutoCorrectionEnabledPerUserSettings"
+        android:persistent="true" />
+    <CheckBoxPreference
+        android:key="@string/prefs_PredictionEngineSuggestBestMatching"
+        android:title="Suggest Best Matching"
+        android:summary="Suggests words before the entire word is commited instead of only after"
+        android:defaultValue="@bool/config_PredictionEngineSuggestBestMatching"
         android:persistent="true" />
     <Preference
-        android:key="pref_predictive_engine_version_two_clear"
+        android:key="@string/prefs_PredictionEngineClearData"
         android:title="Clear Prediction Engine data"
         android:persistent="false">
     </Preference>
